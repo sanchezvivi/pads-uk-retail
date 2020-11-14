@@ -66,3 +66,4 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 >>>>>>> d0505f488ed78129c6df61cd7c2ec973b844e45a
+retail.csv
