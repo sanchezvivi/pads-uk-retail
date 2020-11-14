@@ -1,0 +1,102 @@
+---
+title: "UK Sales"
+author: "Viviane Sanchez"
+date: "11/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, 
+                      fig.retina = 2 ,fig.height=5, fig.width=10)
+
+
+```
+
+## R Markdown
+
+```{r eval = TRUE, tidy = FALSE}
+
+library(tidyverse)
+library(tidymodels)
+library(tidytext)
+library(skimr)
+library(ggrepel)
+library(factoextra)
+library(zoo)
+library(clue)
+library(readxl)
+library(janitor)
+library(lubridate)
+library(inspectdf)
+library(knitr)
+library(arules)
+library(arulesViz)
+
+
+```
+
+## Pré-processamento
+
+Preparação da base para o formato utilizado pelo pacote `arules`
+
+```{r pressure, echo=FALSE}
+
+retail_raw <- read_csv("data/retail.csv")
+
+retail <- retail_raw %>% 
+  clean_names() %>%
+  mutate(description = str_replace(description, ",","|")) %>% 
+  glimpse
+
+```
+
+
+```{r}
+
+#retail$description <- gsub(",","|", retail$description)
+
+item_list <- ddply(retail, c("customer_id","date"), 
+                  function(df1)paste(df1$description, 
+                                     collapse = ","))
+str(item_list)
+
+# remover campos desnecessários
+item_list$customer_id <- NULL
+item_list$date <- NULL
+colnames(item_list) <- c("items")
+
+item_list %>% glimpse
+
+write.csv(item_list,"data/market_basket.csv",
+          quote = FALSE, row.names = TRUE)
+
+
+tr_raw <- read.transactions('data/market_basket.csv', 
+                            format = 'basket', sep = ',')
+tr
+summary(tr_raw)
+
+```
+
+
+- Preparar a base (sanity tests)
+- Quantos produtos?
+- Que categorias?
+- Quantas compras de volume muito grande?
+- Existem preços suspeitos?
+- Quantos clientes? Vazios?
+- Descritivas
+- Quantos produtos por transação?
+- Best sellers
+- Regras de Associação
+
+
+
+```{r}
+
+
+
+
+```
+

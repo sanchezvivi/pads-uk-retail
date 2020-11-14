@@ -1,0 +1,101 @@
+---
+title: "Análise de cesta de Compras"
+author: "Debora, Renato, Viviane"
+date: "11/14/2020"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+library(plyr)
+library(readxl)
+library(knitr)
+
+library(outliers)
+
+library(ggthemes)
+library(skimr)
+library(lubridate)
+
+library(arules)
+library(arulesViz)
+
+library(tidyverse)
+library(tidytext)
+library(tidymodels)
+
+library(devtools)
+library(factoextra)
+
+library(flexdashboard)
+library(shiny)
+
+library(highcharter)
+
+today <- Sys.Date()
+
+#load_rmetrics_calendars(2000:year(Sys.Date())+1)
+
+#calendars()
+
+bizdays.options$set(default.calendar='Brazil/ANBIMA')
+
+#source("../derivativas_palette.R")
+
+theme_set(theme_minimal())
+theme_update(text = element_text(family = "Open Sans"),
+             plot.title = element_text(face = "bold", size = 23,
+                                       color = "#1d3752"))
+
+options(digits=2)
+
+
+```
+
+
+```{r global, warning=FALSE, context = "data", cache = TRUE, message = FALSE}
+
+
+
+
+```
+
+
+
+Mercado
+=====================================  
+
+Parâmetros {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+
+
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Preço do Ativo
+
+
+```{r warning=FALSE, context="server"}
+
+
+
+```
+
+```{r}
+
+#output
+
+```
+
+

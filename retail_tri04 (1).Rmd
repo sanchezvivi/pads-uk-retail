@@ -1,0 +1,309 @@
+---
+title: "Análise de cesta de Compras"
+author: "Debora, Renato, Viviane"
+date: "27/11/2020"
+output: html_document
+---
+
+TO DOs
+
+- Github
+- revisar a descritiva geral
+- revisar o PCA
+- revisar a descritiva por categoria
+- shinny
+
+
+# Objetivo
+
+O time de negócio de um varejista online do Reino Unido precisa aumentar suas vendas.
+
+Para isso, vamos fazer uma análise do comportamento de suas vendas para fazer uma sugestão de campanha de impulsionamento de vendas por associação de produtos.
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Bibliotecas
+
+```{r}
+library(tidyverse)
+library(plyr)
+library(readxl)
+library(knitr)
+
+library(outliers)
+
+library(ggplot2)
+library(ggthemes)
+library(skimr)
+library(lubridate)
+
+library(arules)
+library(arulesViz)
+
+library(tidytext)
+
+library(devtools)
+library(factoextra)
+
+```
+<br>
+<br>
+<br>
+# Preparação da Base
+
+```{r}
+#Base
+retail <- read_csv("retail.csv")
+
+#ajuste do campo Description
+retail$Description <- gsub(",","|", retail$Description)
+
+#Criacao da variavel Vendas em dinheiro
+retail <- retail %>% mutate(net = Quantity * UnitPrice)
+
+#conversao de tipo de variavel
+retail$InvoiceNo <- as.character(retail$InvoiceNo)
+retail$CustomerID <- as.character(retail$CustomerID)
+
+```
+
+<br>
+<br>
+<br>
+# Descrição das Vendas
+
+## Vendas gerais
+
+```{r}
+skim(retail)
+```
+
+
+
+
+## Maiores Vendas
+
+```{r}
+
+retail %>% 
+  dplyr:: group_by(retail$StockCode,retail$Description) %>%
+  dplyr:: summarise(Qty = sum(Quantity), Net = sum(net)) %>% 
+  arrange(desc(Net))
+
+```
+
+
+## Vendas por transação
+
+```{r}
+
+#Quantos produtos por transação?
+tickets <- retail %>% 
+  dplyr:: group_by(retail$InvoiceNo) %>%
+  dplyr:: summarise(Qty = sum(Quantity), Net = sum(net)) %>% 
+  arrange(desc(Net))
+
+ggplot(tickets, aes(x=Qty)) + geom_histogram(binwidth=50) + coord_cartesian(xlim = c(0, 2000))+
+  geom_vline(aes(xintercept=median(Qty)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(Qty)),
+            color="red", linetype="dashed", size=1)+
+  theme_economist()
+
+
+
+
+mean(tickets$Qty)
+median(tickets$Qty)
+
+
+```
+
+
+
+```{r}
+skim(tickets)
+```
+
+
+## Análise de preço
+
+```{r}
+
+#Existem preços suspeitos?
+
+
+skim(retail$UnitPrice)
+
+ggplot(retail, aes(x = UnitPrice)) + geom_histogram(binwidth = 5) + coord_cartesian(xlim = c(0, 50))+
+  geom_vline(aes(xintercept=median(UnitPrice)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(UnitPrice)),
+            color="red", linetype="dashed", size=1)+
+  theme_economist()
+
+
+ ggplot(retail, aes(y=UnitPrice)) + 
+  geom_boxplot()
+
+  ggplot(retail, aes(y=UnitPrice)) +  coord_cartesian(ylim = c(0, 30))+
+  geom_boxplot()
+
+
+  retail %>% filter()
+
+
+
+```
+
+
+
+## Analise de clientes
+
+```{r}
+#Quantos clientes? #Quantos clientes Vazios?
+
+clientes <- retail %>% 
+  dplyr:: group_by(retail$CustomerID) %>%
+  dplyr:: summarise(Qty = sum(Quantity), Net = sum(net)) %>% 
+  arrange(desc(Net))
+
+clientes %>% filter(Qty == 0)
+
+
+
+
+```
+
+
+
+
+# Agrupamento das compras
+
+
+```{r}
+to_pca <- retail %>% 
+   dplyr::group_by(InvoiceNo,Description) %>% 
+   dplyr::summarise(total_quantity = sum(Quantity),.groups = "drop") %>% 
+   dplyr::arrange(total_quantity %>% desc()) %>%
+   dplyr::group_by(Description) %>%
+   dplyr::mutate(total_quantity_description = sum(total_quantity)) %>% 
+   dplyr::arrange(total_quantity_description %>% desc()) %>% 
+   dplyr::ungroup() %>% 
+   dplyr::select(-total_quantity_description) %>% 
+   pivot_wider(names_from = Description,
+              values_from = total_quantity)
+```
+
+PCA top 500 products
+```{r}
+
+to_pca <- to_pca %>% mutate_all(funs(replace_na(., 0)))
+
+to_pca2 <- to_pca[,3:500]
+pca_model <- prcomp(to_pca2, center = TRUE,scale. = TRUE)
+
+plot(pca_model)
+
+```
+
+
+
+
+```{r}
+
+df <- as.data.frame( pca_model$rotation[,1:5])
+
+tb <- as_tibble( pca_model$rotation[,1:5])
+ 
+df1 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC1^2 > mean(PC1^2)) %>% select(c(PC1,nome))
+#COMIDA E LANCHES
+                                              
+df2 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC2^2 > mean(PC2^2)) %>% select(c(PC2,nome))
+#ITENS DE COZINHA
+
+df3 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC3^2 > mean(PC3^2)) %>% select(c(PC3,nome))
+#ITEM ESCOLAR
+
+df4 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC4^2 > mean(PC4^2)) %>% select(c(PC4,nome))
+#PRESENTES DA VOVÓ
+
+df5 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC5^2 > mean(PC5^2)) %>% select(c(PC5,nome))
+#PRESENTES IMAGINARIUM
+
+skim(df)
+mean(df$PC1)
+
+```
+
+
+```{r}
+pca_model
+  
+```
+
+# Regra de associação
+
+```{r}
+itemList <- ddply(retail,c("CustomerID","Date"), 
+                  function(df1)paste(df1$Description, 
+                                     collapse = ","))
+
+# remover campos desnecessarios
+itemList$CustomerID <- NULL
+itemList$Date <- NULL
+colnames(itemList) <- c("items")
+
+write.csv(itemList,"market_basket.csv", quote = FALSE, row.names = TRUE)
+
+tr <- read.transactions('market_basket.csv', format = 'basket', sep=',')
+tr
+summary(tr)
+```
+
+
+```{r}
+
+rules <- apriori(tr, parameter = list(sup = 0.001, conf = 0.8))
+
+inspect(head(rules, n = 10, by = c("confidence", "lift")))
+
+
+retail$CustomerID <- as.character(retail$CustomerID)
+
+```
+
+
+
+# TESTE DE AGRUPAMENTO DE PRODUTOS
+
+```{r}
+groups <- list()
+x <-  unique(retail$Description)
+
+i <- 1
+while(length(x) > 0)
+{
+  id <- agrep(x[1], x, ignore.case = TRUE, max.distance = 0.3)
+  groups[[i]] <- x[id]
+  x <- x[-id]
+  i <- i + 1
+}
+
+head(groups, n = 20)
+groups2 <- as.data.frame(groups)
+```
+
+
+
+
+
+
+
+
+
+
