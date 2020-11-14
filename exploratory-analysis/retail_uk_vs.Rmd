@@ -17,9 +17,6 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE,
 
 ```{r eval = TRUE, tidy = FALSE}
 
-library(tidyverse)
-library(tidymodels)
-library(tidytext)
 library(skimr)
 library(ggrepel)
 library(factoextra)
@@ -27,12 +24,16 @@ library(zoo)
 library(clue)
 library(readxl)
 library(janitor)
-library(lubridate)
 library(inspectdf)
 library(knitr)
 library(arules)
 library(arulesViz)
+library(tidytext)
+library(lubridate)
+library(tidyverse)
+library(conflicted)
 
+conflict_prefer("filter", "dplyr")
 
 ```
 

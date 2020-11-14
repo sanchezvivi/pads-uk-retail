@@ -48,7 +48,7 @@ bizdays.options$set(default.calendar='Brazil/ANBIMA')
 
 #source("../derivativas_palette.R")
 
-theme_set(theme_minimal())
+theme_set(theme_economist())
 theme_update(text = element_text(family = "Open Sans"),
              plot.title = element_text(face = "bold", size = 23,
                                        color = "#1d3752"))

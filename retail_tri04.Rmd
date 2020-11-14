@@ -8,11 +8,24 @@ output: html_document
 TO DOs
 
 - Github
-- revisar a descritiva geral
-- revisar o PCA
-- revisar a descritiva por categoria
-- shinny
+- revisar a descritiva geral (**Renato**)
+  - limpar outliers
+  - escolher grupo (tea) e analisar mais a fundo
+- revisar o PCA (**Vivi**)
+- revisar a descritiva por categoria (**Vivi**)
+- Analisar a probabilidade de compra de um produto/categoria da missão (Logit) (quarta)
+- modelo de associação (arules)
+  - normalizar variáveis (remover cores) (**Débora**)
+- shinny (discutimos quarta)
 
+
+Apresentação (15 min)
+- Apresentação geral dos dados (descritivas)
+  - geral 
+  - da missão selecionada (adiantar código do grupo foco) 
+- Escolha de um segmento/missão de compra para focar 
+- Explorar as regras de associação
+- Recomendação de quais produtos/categorias focar e quais tomar cuidado com canibalização (via PCA).
 
 # Objetivo
 
@@ -49,6 +62,14 @@ library(tidytext)
 library(devtools)
 library(factoextra)
 
+theme_set(theme_economist())
+theme_update(text = element_text(family = "Open Sans"),
+             plot.title = element_text(face = "bold", size = 23,
+                                       color = "#1d3752"))
+
+options(digits=2)
+
+
 ```
 <br>
 <br>
@@ -57,7 +78,7 @@ library(factoextra)
 
 ```{r}
 #Base
-retail <- read_csv("retail.csv")
+retail <- read_csv("data/retail.csv")
 
 #ajuste do campo Description
 retail$Description <- gsub(",","|", retail$Description)
@@ -109,10 +130,9 @@ tickets <- retail %>%
 
 ggplot(tickets, aes(x=Qty)) + geom_histogram(binwidth=50) + coord_cartesian(xlim = c(0, 2000))+
   geom_vline(aes(xintercept=median(Qty)),
-            color="blue", linetype="dashed", size=1)+
+            color="blue", linetype="dashed", size=1) +
    geom_vline(aes(xintercept=mean(Qty)),
-            color="red", linetype="dashed", size=1)+
-  theme_economist()
+            color="red", linetype="dashed", size=1)
 
 
 
@@ -143,9 +163,7 @@ ggplot(retail, aes(x = UnitPrice)) + geom_histogram(binwidth = 5) + coord_cartes
   geom_vline(aes(xintercept=median(UnitPrice)),
             color="blue", linetype="dashed", size=1)+
    geom_vline(aes(xintercept=mean(UnitPrice)),
-            color="red", linetype="dashed", size=1)+
-  theme_economist()
-
+            color="red", linetype="dashed", size=1)
 
  ggplot(retail, aes(y=UnitPrice)) + 
   geom_boxplot()
@@ -154,9 +172,7 @@ ggplot(retail, aes(x = UnitPrice)) + geom_histogram(binwidth = 5) + coord_cartes
   geom_boxplot()
 
 
-  retail %>% filter()
-
-
+  #retail %>% filter()
 
 ```
 
@@ -173,9 +189,6 @@ clientes <- retail %>%
   arrange(desc(Net))
 
 clientes %>% filter(Qty == 0)
-
-
-
 
 ```
 
@@ -212,11 +225,9 @@ plot(pca_model)
 ```
 
 
-
-
 ```{r}
 
-df <- as.data.frame( pca_model$rotation[,1:5])
+df <- as.data.frame(pca_model$rotation[,1:5])
 
 tb <- as_tibble( pca_model$rotation[,1:5])
  
