@@ -222,7 +222,7 @@ PCA top 500 products
 to_pca <- to_pca %>% mutate_all(funs(replace_na(., 0)))
 
 to_pca2 <- to_pca[,3:500]
-pca_model <- prcomp(to_pca2, center = TRUE,scale. = TRUE)
+pca_model <- prcomp(to_pca2, center = TRUE, scale. = TRUE)
 
 plot(pca_model)
 

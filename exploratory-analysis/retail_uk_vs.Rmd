@@ -30,6 +30,7 @@ library(arules)
 library(arulesViz)
 library(tidytext)
 library(lubridate)
+library(tidymodels)
 library(tidyverse)
 library(conflicted)
 
@@ -52,7 +53,7 @@ retail <- retail_raw %>%
 
 ```
 
-
+## Preparação para Basket Analysis
 ```{r}
 
 #retail$description <- gsub(",","|", retail$description)
@@ -94,10 +95,98 @@ summary(tr_raw)
 
 
 
+## EDA
+
 ```{r}
 
+retail %>% 
+  mutate(net = quantity * unit_price) %>% 
+  group_by(stock_code, description) %>%
+  summarise(qty = sum(quantity), net = sum(net)) %>% 
+  arrange(desc(net))
+
+```
 
 
+## PCA
+
+```{r}
+
+pca_prep <- retail %>% 
+   group_by(invoice_no,description) %>% 
+   summarise(total_quantity = sum(quantity),.groups = "drop") %>% 
+   arrange(total_quantity %>% desc()) %>%
+   group_by(description) %>%
+   mutate(total_quantity_description = sum(total_quantity)) %>% 
+   arrange(total_quantity_description %>% desc()) %>% 
+   ungroup() %>% 
+   select(-total_quantity_description) %>% 
+   pivot_wider(names_from = description,
+              values_from = total_quantity,
+              values_fill = 0) %>% #janitor::clean_names() %>% glimpse()
+     select(1:501)
+
+```
+
+
+```{r}
+
+rec_pca <- recipe( ~ ., data = pca_prep) %>% 
+  update_role(invoice_no, new_role = "id") %>% 
+  step_normalize(all_predictors()) %>% 
+  step_pca(all_predictors(), id = "pca") %>% 
+  prep()
+
+
+tidy_pca <- rec_pca %>% 
+  tidy(id = "pca")
+
+```
+
+
+```{r}
+
+variance_pct <- rec_pca$steps[[2]]$res
+
+#(cumsum(variance_pct$sdev^2) / sum(variance_pct$sdev^2))
+
+retail_pca <- juice(rec_pca) %>% glimpse
+
+fviz_eig(variance_pct, addlabels = TRUE) +
+  labs(x = "Componente Principal",
+       y = "Percentual explicado da variância")
+
+```
+
+# Compomentes principais
+
+```{r}
+
+tidy_pca %>%
+  filter(component %in% paste0("PC", 1:5)) %>%
+  group_by(component) %>%
+  top_n(10, abs(value)) %>%
+  ungroup() %>%
+  mutate(terms = reorder_within(terms, abs(value), component)) %>%
+  ggplot(aes(abs(value), terms, fill = if_else(value > 0, 'Positiva','Negativa'))) +
+  geom_col(size = 0.5) +
+  facet_wrap(~component, scales = "free_y") +
+  scale_y_reordered() +
+  scale_fill_manual(values = c('#4E84C4', '#2d2017')) +
+  labs(x = "Valor absoluto da contribuição",
+       y = NULL, fill = "Contribuição")
+
+
+```
+
+```{r}
+
+tidy_pca %>%
+  filter(component %in% paste0("PC", 1:5)) %>%
+  group_by(component) %>%
+  top_n(10, abs(value)) %>%
+  ungroup() %>%
+  mutate(terms = reorder_within(terms, abs(value), component))
 
 ```
 
