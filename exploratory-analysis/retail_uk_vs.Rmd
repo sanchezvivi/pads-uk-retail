@@ -33,8 +33,17 @@ library(lubridate)
 library(tidymodels)
 library(tidyverse)
 library(conflicted)
+library(highcharter)
 
 conflict_prefer("filter", "dplyr")
+
+theme_set(theme_economist())
+theme_update(text = element_text(family = "Open Sans"),
+             plot.title = element_text(face = "bold", size = 23,
+                                       color = "#1d3752"),
+             legend.position = "bottom")
+
+options(digits=4)
 
 ```
 
@@ -160,14 +169,20 @@ fviz_eig(variance_pct, addlabels = TRUE) +
 
 # Compomentes principais
 
-```{r}
+```{r include=FALSE}
 
-tidy_pca %>%
-  filter(component %in% paste0("PC", 1:5)) %>%
+top_pca <- tidy_pca %>%
+  filter(component %in% paste0("PC", 1:6)) %>%
   group_by(component) %>%
+  filter(value^2 > mean(value^2)) %>%
+  ungroup()
+  
+top_pca %>% group_by(component) %>% skim()
+  
+top_pca %>% 
+  group_by(component) %>% 
+  mutate(terms = reorder_within(terms, abs(value), component)) %>% 
   top_n(10, abs(value)) %>%
-  ungroup() %>%
-  mutate(terms = reorder_within(terms, abs(value), component)) %>%
   ggplot(aes(abs(value), terms, fill = if_else(value > 0, 'Positiva','Negativa'))) +
   geom_col(size = 0.5) +
   facet_wrap(~component, scales = "free_y") +
@@ -176,17 +191,101 @@ tidy_pca %>%
   labs(x = "Valor absoluto da contribuição",
        y = NULL, fill = "Contribuição")
 
-
 ```
+
+## Produtos da missão selecionada
 
 ```{r}
 
-tidy_pca %>%
-  filter(component %in% paste0("PC", 1:5)) %>%
-  group_by(component) %>%
-  top_n(10, abs(value)) %>%
-  ungroup() %>%
-  mutate(terms = reorder_within(terms, abs(value), component))
+products <- top_pca %>% 
+  filter(component %in% paste0("PC", 2)) %>% 
+  pull(terms)
+
+```
+
+
+```{r}
+
+rt_summary <- retail %>% glimpse
+  filter(description %in% products) %>%
+  mutate(month_year = floor_date(date)) %>% 
+  group_by(country) %>% 
+  summarise(across(c("quantity", "total_investment"), sum),
+            across(c("unit_price", "nps"), mean),
+            total_revenue = sum(quantity * unit_price))
+  #summarise(total_qty = sum(quantity),
+  #          avg_px = mean(unit_price),
+  #          total_revenue = sum(quantity * unit_price),
+  #          nps = mean(nps),
+  #          total_investment = sum(total_investment))
+#
+  colnames(retail)
+
+  ?floor_date
+
+```
+
+- quantidade de itens por pedido
+- preços outliers
+- evolução das compras dos principais produtos
+- análise dia da semana/horário
+- compras em feridos?
+- impacto do sponsorship (ref estudo matéria patrocinada)
+- comparar tv x digital
+- sem? affiliates?
+
+
+
+## Tile map
+
+```{r}
+
+url <- "https://gist.githubusercontent.com/maartenzam/787498bbc07ae06b637447dbd430ea0a/raw/9a9dafafb44d8990f85243a9c7ca349acd3a0d07/worldtilegrid.csv"
+
+countries_raw <- read_csv(url)
+
+countries <- countries_raw %>% 
+  rename_all(str_replace_all, "\\.", "_") %>% 
+  select(x, y, name, region, alpha_2)
+
+ret_cntry <- countries %>% 
+  left_join(rt_summary, by = c("name"="country")) %>% 
+  mutate_all(funs(replace_na(., 0)))
+
+```
+
+tilemap - selecionar produtos e ver venda por região
+
+```{r}
+
+mapdata <- get_data_from_map(download_map_data("custom/world")) %>% 
+  clean_names()
+
+ret_cntry <- mapdata %>% select(name, hc_a2, code)
+  left_join(rt_summary, by = c("name"="country")) %>% 
+  mutate_all(funs(replace_na(., 0)))
+
+```
+
+
+```{r}
+
+hcmap(
+  "custom/world",
+  data = rt_summary,
+  value = "total_revenue",
+  joinBy = c("name","country"),
+  name = "Sales by Country",
+  dataLabels = list(enabled = TRUE, format = "{point.name}"),
+  borderColor = "#FAFAFA",
+  borderWidth = 0.1,
+  tooltip = list(
+    valueDecimals = 2,
+    valuePrefix = "$",
+    valueSuffix = "USD"
+  )
+)
+
 
 ```
 

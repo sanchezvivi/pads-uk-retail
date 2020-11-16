@@ -6,85 +6,141 @@ output:
   flexdashboard::flex_dashboard:
     orientation: rows
     vertical_layout: fill
+    theme: lumen
 runtime: shiny_prerendered
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-
-library(plyr)
 library(readxl)
 library(knitr)
 
 library(outliers)
-
 library(ggthemes)
 library(skimr)
 library(lubridate)
+library(janitor)
 
 library(arules)
 library(arulesViz)
-
-library(tidyverse)
-library(tidytext)
-library(tidymodels)
 
 library(devtools)
 library(factoextra)
 
 library(flexdashboard)
 library(shiny)
-
 library(highcharter)
 
+library(tidyverse)
+library(tidytext)
+library(tidymodels)
+
+library(conflicted)
+
+
+
+conflict_prefer("filter", "dplyr")
+conflict_prefer("mutate", "dplyr")
+conflict_prefer("arrange", "dplyr")
+
+
 today <- Sys.Date()
-
-#load_rmetrics_calendars(2000:year(Sys.Date())+1)
-
-#calendars()
-
-bizdays.options$set(default.calendar='Brazil/ANBIMA')
-
-#source("../derivativas_palette.R")
 
 theme_set(theme_economist())
 theme_update(text = element_text(family = "Open Sans"),
              plot.title = element_text(face = "bold", size = 23,
                                        color = "#1d3752"))
 
-options(digits=2)
+options(digits=4)
+
+```
+
+
+```{r global, message=FALSE, warning=FALSE, cache=TRUE, context="data", include=FALSE}
+
+### Data
+
+retail_raw <- read_csv("data/retail.csv")
+
+retail <- retail_raw %>% 
+  clean_names() %>%
+  mutate(description = str_replace(description, ",","|"))
+
+### Wrangling
+
+
+### PCA
+
+pca_prep <- retail %>% 
+   group_by(invoice_no,description) %>% 
+   summarise(total_quantity = sum(quantity),.groups = "drop") %>% 
+   arrange(total_quantity %>% desc()) %>%
+   group_by(description) %>%
+   mutate(total_quantity_description = sum(total_quantity)) %>% 
+   arrange(total_quantity_description %>% desc()) %>% 
+   ungroup() %>% 
+   select(-total_quantity_description) %>% 
+   pivot_wider(names_from = description,
+              values_from = total_quantity,
+              values_fill = 0) %>% #janitor::clean_names() %>% glimpse()
+     select(1:501)
+
+rec_pca <- recipe( ~ ., data = pca_prep) %>% 
+  update_role(invoice_no, new_role = "id") %>% 
+  step_normalize(all_predictors()) %>% 
+  step_pca(all_predictors(), id = "pca") %>% 
+  prep()
+
+tidy_pca <- rec_pca %>% 
+  tidy(id = "pca")
+
+top_pca <- tidy_pca %>%
+  filter(component %in% paste0("PC", 1:6)) %>%
+  group_by(component) %>%
+  filter(value^2 > mean(value^2)) %>%
+  ungroup()
+
+products <- top_pca %>% 
+  filter(component %in% paste0("PC", 2)) %>% 
+  pull(terms)
+
+### Basket Analysis
+
+#tr_raw <- read.transactions('data/market_basket.csv', 
+#                            format = 'basket', sep = ',')
+#
+
+### Recomendação
 
 
 ```
 
 
-```{r global, warning=FALSE, context = "data", cache = TRUE, message = FALSE}
-
-
-
-
-```
-
-
-
-Mercado
+Introdução
 =====================================  
 
-Parâmetros {.sidebar}
------------------------------------------------------------------------
+```{r}
+
+#Slide - Como aumentar as vendas?
+
+```
 
 ```{r}
 
 
+
+
 ```
 
+
+Análise Geral
+=====================================  
 
 Row {.tabset}
 -----------------------------------------------------------------------
 
-### Preço do Ativo
-
+### Gráfico 1
 
 ```{r warning=FALSE, context="server"}
 
@@ -92,10 +148,110 @@ Row {.tabset}
 
 ```
 
+### Gráfico 2
+
 ```{r}
 
-#output
 
 ```
+
+
+### Gráfico 3
+
+```{r}
+
+
+```
+
+
+### PCA 
+
+```{r echo=FALSE}
+
+top_pca %>% 
+  group_by(component) %>% 
+  mutate(terms = reorder_within(terms, abs(value), component)) %>% 
+  top_n(10, abs(value)) %>%
+  ggplot(aes(abs(value), terms, fill = if_else(value > 0, 'Positiva','Negativa'))) +
+  geom_col(size = 0.5) +
+  facet_wrap(~component, scales = "free_y") +
+  scale_y_reordered() +
+  scale_fill_manual(values = c('#4E84C4', '#2d2017')) +
+  labs(x = "Valor absoluto da contribuição",
+       y = NULL, fill = "Contribuição")
+
+```
+
+Missão
+=====================================  
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Missão selecionada
+
+```{r}
+
+
+
+```
+
+### Descritiva
+
+```{r}
+
+
+
+
+```
+
+### Gráfico 2
+
+
+```{r}
+
+
+
+```
+
+
+Regras de Associação
+=====================================  
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+```{r}
+
+```
+
+
+Recomendação
+=====================================  
+
+Row {.sidebar}
+-----------------------------------------------------------------------
+
+### Selecione os produtos
+
+```{r}
+
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Resultados
+
+```{r}
+
+
+
+```
+
+
+
+
 
 
