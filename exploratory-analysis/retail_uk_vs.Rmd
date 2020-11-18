@@ -114,6 +114,8 @@ retail %>%
   summarise(qty = sum(quantity), net = sum(net)) %>% 
   arrange(desc(net))
 
+retail %>% skim()
+
 ```
 
 
