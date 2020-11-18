@@ -47,10 +47,11 @@ conflict_prefer("arrange", "dplyr")
 
 today <- Sys.Date()
 
-theme_set(theme_economist())
+theme_set(theme_minimal())
 theme_update(text = element_text(family = "Open Sans"),
              plot.title = element_text(face = "bold", size = 23,
-                                       color = "#1d3752"))
+                                       color = "#1d3752"),
+             legend.position = "bottom")
 
 options(digits=4)
 
@@ -67,7 +68,7 @@ retail <- retail_raw %>%
   clean_names() %>%
   mutate(description = str_replace(description, ",","|"))
 
-### Wrangling
+### Processamento
 
 
 ### PCA
@@ -103,7 +104,27 @@ top_pca <- tidy_pca %>%
 
 products <- top_pca %>% 
   filter(component %in% paste0("PC", 2)) %>% 
+  arrange(desc(value)) %>% 
   pull(terms)
+
+#### 
+
+
+rt_filter <-  retail %>% 
+  filter(description %in% products) %>%
+  #filter(description %in% input$prod_id) %>% 
+  mutate(month_year = as.Date(floor_date(date)),
+         total_revenue = sum(quantity * unit_price)) %>% glimpse
+
+rt_summary <- rt_filter %>% 
+  group_by(country) %>% 
+  summarise(across(c("quantity", "total_investment", "total_revenue"), ~sum(.x, na.rm = T)),
+            across(c("unit_price", "nps"), ~mean(.x, na.rm = T)))
+
+
+cols <- tibble(col = colnames(rt_summary %>% select(is.numeric)),
+               name = c("Quantidade","Investimento Total", "Preço Unitário",
+                        "NPS","Receita Total"))
 
 ### Basket Analysis
 
@@ -120,7 +141,7 @@ products <- top_pca %>%
 Introdução
 =====================================  
 
-```{r}
+```{r echo=FALSE}
 
 #Slide - Como aumentar as vendas?
 
@@ -137,16 +158,27 @@ Introdução
 Análise Geral
 =====================================  
 
+Parâmetros {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+
+
+```
+
+
 Row {.tabset}
 -----------------------------------------------------------------------
 
 ### Gráfico 1
+
 
 ```{r warning=FALSE, context="server"}
 
 
 
 ```
+
 
 ### Gráfico 2
 
@@ -174,39 +206,166 @@ top_pca %>%
   top_n(10, abs(value)) %>%
   ggplot(aes(abs(value), terms, fill = if_else(value > 0, 'Positiva','Negativa'))) +
   geom_col(size = 0.5) +
-  facet_wrap(~component, scales = "free_y") +
+  facet_wrap(~component, scales = "free_y", nrow = 3) +
   scale_y_reordered() +
   scale_fill_manual(values = c('#4E84C4', '#2d2017')) +
   labs(x = "Valor absoluto da contribuição",
-       y = NULL, fill = "Contribuição")
+       y = NULL, fill = "Contribuição") +
+  theme(text = element_text(size = 8))
 
 ```
 
 Missão
 =====================================  
 
+Parâmetros {.sidebar}
+-----------------------------------------------------------------------
+
+```{r echo=FALSE}
+
+selectInput("var_id", label = "Variável", choices = cols$name,
+            multiple = F,
+            selected = "Receita Total")
+
+selectInput("prod_id", label = "Produto", choices = products,
+            multiple = T,
+            selected = products[1])
+
+actionButton("update_button", "Atualizar")
+
+
+```
+
+
 Row {.tabset}
 -----------------------------------------------------------------------
 
-### Missão selecionada
+### Produtos
 
-```{r}
+```{r echo =FALSE}
+
+
+plotOutput("sales_line")
+
+```
+
+
+```{r warning=FALSE, context="server"}
+
+prod_summary <- reactive({
+  
+  clicks <- input$update_button
+  
+isolate({  
+
+#prod_summary <- 
+  rt_filter %>% 
+  filter(description %in% input$prod_id) %>% 
+  #filter(description %in% c("12 PENCILS SMALL TUBE SKULL")) %>% 
+  group_by(month_year, description) %>% 
+  summarise(across(c("quantity", "total_investment", "total_revenue"), ~sum(.x, na.rm = T)),
+            across(c("unit_price", "nps"), ~mean(.x, na.rm = T)))
+
+
+#prod_summary %>% glimpse
+  
+})})
+
+
+selected_col <- reactive({
+  
+    clicks <- input$update_button
+  
+  isolate({
+  
+    cols %>% 
+      #filter(name == "Quantidade") %>% 
+      filter(name == input$var_id) %>% 
+      pull(col)
+  
+})})
+
+
+output$sales_line <- renderPlot({
+  
+  clicks <- input$update_button
+  
+isolate({  
+  
+  #prod_summary() %>% 
+  prod_summary %>% 
+    ggplot(aes(x = month_year, 
+               #y = selected_col(), 
+               y = quantit, 
+               color = description)) +
+    geom_line() +
+    labs(y = input$var_id, x = "")
+    
+ # prod_summary() %>%  
+ #   hchart(., "line", 
+ #          hcaes(x = month_year, 
+ #                y = selected,
+ #                group = description,
+ #                y = quantity
+ #                )) %>% 
+ #   hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
+  
+  })})
 
 
 
 ```
 
-### Descritiva
 
-```{r}
+### Mapa
 
+```{r echo=FALSE}
 
-
+highchartOutput("sales_map")
 
 ```
 
-### Gráfico 2
+```{r warning=FALSE, context="server"}
 
+selected_col <- reactive({
+  
+    clicks <- input$update_button
+  
+  isolate({
+  
+    cols %>% 
+      #filter(name == "Quantidade") %>% 
+      filter(name == input$var_id) %>% 
+      pull(col)
+  
+})})
+
+
+output$sales_map <- renderHighchart({
+  
+  clicks <- input$update_button
+  
+isolate({  
+  
+  hcmap(
+    "custom/world-robinson-lowres", 
+    data = rt_summary,
+    name = input$var_id, 
+    #value = "total_revenue",
+    value = selected_col(),
+    borderWidth = 0,
+    nullColor = "#d3d3d3",
+    joinBy = c("name","country")) %>%
+  hc_colorAxis(
+    stops = color_stops(colors = viridisLite::inferno(10, begin = 0.1, direction = -1)),
+    type = "logarithmic") %>% 
+  hc_tooltip(valueDecimals = 2)
+  
+  })})
+
+```
+
+### Gráfico 3
 
 ```{r}
 
@@ -217,6 +376,14 @@ Row {.tabset}
 
 Regras de Associação
 =====================================  
+
+Parâmetros {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+
+```
+
 
 Row {.tabset}
 -----------------------------------------------------------------------
