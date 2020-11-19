@@ -14,14 +14,19 @@ output: html_document
 - Github
 - revisar a descritiva geral (**Renato**)
   - limpar outliers (**Renato**)
-  - escolher grupo (tea) e analisar mais a fundo
+  
+- analise textual (https://www.tidytextmining.com/nasa.html) (**Débora**)
+- normalizar variáveis (remover cores) (**Débora**)
+
 - revisar o PCA (**Vivi**)
 - revisar o PCA com Reino Unido e Cores (**Vivi**)
+
 - revisar a descritiva por categoria (**Vivi**)
-- analise textual (https://www.tidytextmining.com/nasa.html) (**Débora**)
+
 - Analisar a probabilidade de compra de um produto/categoria da missão (Logit) (quarta) (**Débora**)
-- modelo de associação (arules)
-  - normalizar variáveis (remover cores) (**Débora**)
+
+- modelo de associação (arules) (**Renato**)
+
 - shinny (discutimos quarta) (**Vivi**)
 
 
