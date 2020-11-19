@@ -309,10 +309,39 @@ while(length(x) > 0)
   i <- i + 1
 }
 
-head(groups, n = 20)
-groups2 <- as.data.frame(groups)
+head(groups, n = 5)
+#groups2 <- as.data.frame(groups)
 ```
 
+
+
+# CRIANDO NOVA FEATURES
+
+
+```{r}
+head(retail, n = 5)
+retail_2 <- retail %>% 
+  mutate(Description_2 = str_replace(Description,"WHITE", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"RED", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"BLACK", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"ORANGE", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"BLUE", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"PINK", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"GREEN", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"YELLOW", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"PURPLE", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"VIOLET", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"BROWN", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"NAVY", "")) %>% 
+  mutate(Description_2 = str_replace(Description_2,"  ", "")) 
+
+# Falta colocar para tirar espaço do inicio ou do final
+  
+head(retail_2$Description_2,30)
+tail(retail_2$Description_2,30)
+
+
+```
 
 
 
