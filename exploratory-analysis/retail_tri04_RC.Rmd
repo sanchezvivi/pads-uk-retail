@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Bibliotecas
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(plyr)
 library(readxl)
@@ -150,7 +150,7 @@ Quantidade de Produto
 
 ```{r}
 
-#Dataframe agrupado por Ticketb
+#Dataframe agrupado por Ticket
 tickets <- retail %>% 
   dplyr:: group_by(retail$InvoiceNo) %>%
   dplyr:: summarise(Qty = sum(Quantity), Net = sum(net)) %>% 
@@ -267,23 +267,17 @@ median(clientes$Tkt)
  ggplot(clientes, aes(y=Tkt)) + 
   geom_boxplot()
 
-  ggplot(clientes, aes(y=Tkt)) +  coord_cartesian(ylim = c(0, 50))+
-  geom_boxplot()
-  
- # retail2 <- retail %>% dplyr::group_by(CustomerID,InvoiceNo) %>% 
-    #dplyr::mutate(Ticket = length(unique(InvoiceNo))) %>% 
-  #  dplyr::mutate(n = count(CustomerID,InvoiceNo)) %>% 
-  #  dplyr::ungroup()
 
-  #retail2 <- retail %>% dplyr::mutate(n = count(CustomerID,InvoiceNo))
-  
-  
 ```
 
-
-#acima de 100 compras
-# Analise de evolução
-
+ Vemos que os clientes também possuem uma dispersão assimétirca com muitos clientes fazendo um grande número de pedidos.
+ 
+Para nossa análise decidimos tirar os casos mais atípicos, traçando um corte em de clientes até 100 pedidos.
+ 
+```{r}
+foras2 <- clientes %>% filter(Tkt > 100) %>% select(CustomerID)
+retail<- retail %>% dplyr::filter(!CustomerID %in% foras2$CustomerID )
+```
 
 <br>
 
@@ -378,15 +372,13 @@ rules <- apriori(tr, parameter = list(sup = 0.001, conf = 0.8))
 inspect(head(rules, n = 10, by = c("confidence", "lift")))
 
 
-retail$CustomerID <- as.character(retail$CustomerID)
-
 ```
 
 
 
 # TESTE DE AGRUPAMENTO DE PRODUTOS
 
-```{r}
+
 groups <- list()
 x <-  unique(retail$Description)
 
@@ -401,7 +393,7 @@ while(length(x) > 0)
 
 head(groups, n = 20)
 groups2 <- as.data.frame(groups)
-```
+
 
 
 
