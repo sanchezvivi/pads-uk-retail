@@ -51,7 +51,7 @@ library(factoextra)
 
 ```{r}
 #Base
-retail <- read_csv("retail.csv")
+retail <- read_csv("data/retail.csv")
 retial_raw <- retail
 
 #ajuste do campo Description
@@ -367,12 +367,58 @@ summary(tr)
 
 ```{r}
 
-rules <- apriori(tr, parameter = list(sup = 0.001, conf = 0.8))
-
+rules <- apriori(tr, parameter = list(sup = 0.002, conf = 0.8))
+rules
 inspect(head(rules, n = 10, by = c("confidence", "lift")))
+
+df5$nome[20] = "JUMBO BAG 50S CHRISTMAS"
+rules.sub <- subset(rules, subset = rhs %in% df5$nome & lift > 2 )
+rules.sub
+inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
+
+```
+
+
+
+
+
+
+```{r}
+
+plot(rules.sub[1:100],
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
 
 
 ```
+
+
+```{r}
+
+plot(rules.sub[100:200],
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
+
+
+```
+
+
+
+
+
+```{r}
+
+plot(rules.sub[200:285],
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
+
+
+```
+
+
 
 
 
