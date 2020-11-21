@@ -208,7 +208,7 @@ products <- top_pca %>%
 
 ```{r}
 
-rt_summary <- retail %>% glimpse
+rt_summary <- retail %>% 
   filter(description %in% products) %>%
   mutate(month_year = floor_date(date)) %>% 
   group_by(country) %>% 
@@ -223,7 +223,6 @@ rt_summary <- retail %>% glimpse
 #
   colnames(retail)
 
-  ?floor_date
 
 ```
 
@@ -231,11 +230,10 @@ rt_summary <- retail %>% glimpse
 - preços outliers
 - evolução das compras dos principais produtos
 - análise dia da semana/horário
-- compras em feridos?
+- compras em feriados?
 - impacto do sponsorship (ref estudo matéria patrocinada)
 - comparar tv x digital
 - sem? affiliates?
-
 
 
 ## Tile map
@@ -288,6 +286,32 @@ hcmap(
   )
 )
 
+
+```
+
+
+```{r}
+
+
+data(GNI2014, package = "treemap")
+
+hcmap(
+  "custom/world-robinson-lowres", 
+  data = rt_summary,
+  name = "Total Revenue", 
+  value = "total_revenue",
+  borderWidth = 0,
+  nullColor = "#d3d3d3",
+   joinBy = c("name","country"),
+  ) %>%
+  hc_colorAxis(
+    stops = color_stops(colors = viridisLite::inferno(10, begin = 0.1, direction = -1)),
+    type = "logarithmic"
+    )
+
+
+
+?viridisLite::inferno
 
 ```
 

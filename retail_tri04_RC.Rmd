@@ -121,9 +121,6 @@ retail %>%
 
 retail <- retail %>% dplyr::filter(Country == "United Kingdom")
 
-
-
-
 ```
 
 Vemos que o Reino Unido concentra 82.9% do faturamento e 90% das transações.<br>
