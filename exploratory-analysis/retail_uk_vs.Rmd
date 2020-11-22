@@ -62,6 +62,40 @@ retail <- retail_raw %>%
 
 ```
 
+## Filtro
+
+```{r}
+
+tickets <- retail %>% 
+  filter(country == "United Kingdom") %>% 
+  group_by(invoice_no) %>%
+  summarise(Quantidade = sum(quantity), Receita = sum(total_revenue)) %>% 
+  arrange(desc(Receita))
+
+foras <- tickets %>% 
+  filter(Receita > 50000) %>%
+  select(invoice_no) %>% unique() %>% 
+  pull(invoice_no)
+
+clientes <- retail %>% 
+  group_by(customer_id,invoice_no) %>%
+  summarise(Tkt = length(unique(invoice_no)) ,Qty = sum(quantity), Net = sum(total_revenue)) %>%
+  group_by(customer_id) %>%
+  summarise(Tkt = sum(Tkt) ,Qty = sum(Qty), Net = sum(Net)) %>%
+  arrange(desc(Net))
+
+foras2 <- clientes %>% 
+  filter(Tkt > 100) %>% 
+  pull(customer_id)
+
+rt_uk <- retail %>% 
+  filter(country == "United Kingdom") %>% 
+  filter(!invoice_no %in% foras) %>% 
+  filter(!customer_id %in% foras2)
+
+```
+
+
 ## Preparação para Basket Analysis
 ```{r}
 
@@ -108,13 +142,11 @@ summary(tr_raw)
 
 ```{r}
 
-retail %>% 
+rt_uk %>% 
   mutate(net = quantity * unit_price) %>% 
   group_by(stock_code, description) %>%
   summarise(qty = sum(quantity), net = sum(net)) %>% 
   arrange(desc(net))
-
-retail %>% skim()
 
 ```
 
@@ -123,7 +155,7 @@ retail %>% skim()
 
 ```{r}
 
-pca_prep <- retail %>% 
+pca_prep <- rt_uk %>% 
    group_by(invoice_no,description) %>% 
    summarise(total_quantity = sum(quantity),.groups = "drop") %>% 
    arrange(total_quantity %>% desc()) %>%
@@ -208,21 +240,10 @@ products <- top_pca %>%
 
 ```{r}
 
-rt_summary <- retail %>% 
+rt_mission <-  retail %>% 
   filter(description %in% products) %>%
-  mutate(month_year = floor_date(date)) %>% 
-  group_by(country) %>% 
-  summarise(across(c("quantity", "total_investment"), sum),
-            across(c("unit_price", "nps"), mean),
-            total_revenue = sum(quantity * unit_price))
-  #summarise(total_qty = sum(quantity),
-  #          avg_px = mean(unit_price),
-  #          total_revenue = sum(quantity * unit_price),
-  #          nps = mean(nps),
-  #          total_investment = sum(total_investment))
-#
-  colnames(retail)
-
+  mutate(month_year = as.Date(floor_date(date)),
+         total_revenue = sum(quantity * unit_price))
 
 ```
 
@@ -314,4 +335,66 @@ hcmap(
 ?viridisLite::inferno
 
 ```
+
+
+
+
+## Evolução
+
+```{r}
+
+library(viridisLite)
+
+prod_list <- c("ALL","SET OF 4 PANTRY JELLY MOULDS", "RECIPE BOX PANTRY YELLOW DESIGN")
+
+
+selected <- if("ALL" %in% prod_list){products}else{prod_list}
+
+rt_days <- rt_mission %>% 
+   mutate(dow = wday(date, label = T, abbr = T),
+          full_hour = hour(time),
+          holiday = as.factor(holiday)) %>% 
+  filter(description %in% selected) %>%
+  group_by(dow, full_hour, holiday) %>% 
+  summarise(avg_price = sum(unit_price * quantity)/sum(quantity),
+            tkts = n_distinct(invoice_no),
+            clients = n_distinct(customer_id),
+            across(c("quantity", "total_investment", "total_revenue"),
+                   ~sum(.x, na.rm = T)))
+
+rt_days %>% 
+  ggplot(aes(y = clients, x = full_hour, fill = holiday)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~dow, nrow = 3)
+
+
+rt_days %>% 
+  filter(holiday == 1) %>% 
+  ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::label_number_si()) +
+  labs(x = "", y = "Hora", title = "Feriados")
+  
+
+rt_days %>% 
+  filter(holiday == 0) %>% 
+  ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::label_number_si()) + 
+  labs(x = "", y = "Hora", title = "Feriados")
+  
+
+
+```
+
+
+
+```{r}
+
+
+
+
+
+```
+
 

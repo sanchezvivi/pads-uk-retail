@@ -7,10 +7,10 @@ output:
     orientation: rows
     vertical_layout: fill
     theme: lumen
-runtime: shiny
+runtime: shiny_prerendered
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 library(readxl)
@@ -31,6 +31,7 @@ library(factoextra)
 library(flexdashboard)
 library(shiny)
 library(highcharter)
+library(viridisLite)
 
 library(tidyverse)
 library(tidytext)
@@ -67,7 +68,7 @@ hc_cols <- c("#7cb5ec", "#434348", "#90ed7d", "#f7a35c",
 
 ```{r global, message=FALSE, warning=FALSE, cache=TRUE, context="data", include=FALSE}
 
-### Data
+# Data ---------
 
 retail_raw <- read_csv("data/retail.csv")
 
@@ -77,7 +78,7 @@ retail <- retail_raw %>%
   mutate(month_year = as.Date(floor_date(date)),
          total_revenue = quantity * unit_price)
 
-### Processamento
+# Processamento ----------
 
 rt_summary <- retail %>%
   group_by(country) %>% 
@@ -93,12 +94,11 @@ cols_map <- tibble(col = colnames(rt_summary %>%
                                     select(where(is.numeric)) %>% 
                                     select(-starts_with("perc"))),
                name = c("Quantidade","Investimento Total","Receita Total", "Preço Unitário",
-                        "NPS", "Ticket"))
+                        "NPS", "Ticket")) %>%  arrange(name)
 
 
 
-### Análise UK
-
+# Análise UK ------------
 
 group_tb <- tibble(group_name = c("Pedido", "Cliente", "Produto"),
                    col_name = c("invoice_no", "customer_id","description"))
@@ -130,8 +130,12 @@ rt_uk <- retail %>%
   filter(!invoice_no %in% foras) %>% 
   filter(!customer_id %in% foras2)
 
+# Categorização --------------
 
-### PCA
+
+
+
+# PCA -------------
 
 pca_prep <- rt_uk %>% 
    group_by(invoice_no,description) %>% 
@@ -162,25 +166,32 @@ top_pca <- tidy_pca %>%
   filter(value^2 > mean(value^2)) %>%
   ungroup()
 
+skim(top_pca)
+
 products <- top_pca %>% 
   filter(component %in% paste0("PC", 2)) %>% 
   arrange(desc(value)) %>% 
   pull(terms)
 
-#### 
+# Análise Produtos -------------
 
-rt_filter <-  retail %>% 
+rt_mission <-  retail %>% 
   filter(description %in% products) %>%
   mutate(month_year = as.Date(floor_date(date)),
-         total_revenue = sum(quantity * unit_price))
+         total_revenue = quantity * unit_price)
 
-### Basket Analysis
+
+cols_prod <- tibble(col = c("avg_price","tkts" ,"clients","quantity", "total_investment", "total_revenue" ),
+               name = c("Preço Unitário","Pedidos","Clientes", "Quantidade",
+                        "Investimento Total", "Receita Total")) %>% arrange(name)
+
+# Basket Analysis --------------
 
 #tr_raw <- read.transactions('data/market_basket.csv', 
 #                            format = 'basket', sep = ',')
 #
 
-### Recomendação
+# Recomendação --------------
 
 
 
@@ -423,10 +434,10 @@ retail %>%
 ggplot(aes(x = unit_price)) + 
   geom_histogram(binwidth = 1) + coord_cartesian(xlim = c(0, 20))+
   geom_vline(aes(xintercept=median(unit_price)),
-            color="blue", linetype="dashed", size=1)+
+            color="blue", linetype="dashed", size=1) +
    geom_vline(aes(xintercept=mean(unit_price)),
-            color="red", linetype="dashed", size=1)+
-  theme_economist()+
+            color="red", linetype="dashed", size=1) +
+  #theme_economist() +
   labs(title = "Preço por Produto",x = "Preco", y = "Produto")
 
 })})
@@ -461,15 +472,15 @@ Parâmetros {.sidebar}
 
 ```{r echo=FALSE}
 
-selectInput("var_id", label = "Variável", choices = cols_map$name,
+selectInput("var_id_2", label = "Variável", choices = cols_prod$name,
             multiple = F,
-            selected = "Receita Total")
+            selected = cols_prod$name[1])
 
-selectInput("prod_id", label = "Produto", choices = products,
+selectInput("prod_id", label = "Produto", choices = append("ALL", products),
             multiple = T,
-            selected = products[1])
+            selected = "ALL")
 
-actionButton("update_button", "Atualizar")
+actionButton("update_button_2", "Atualizar")
 
 
 ```
@@ -478,79 +489,170 @@ actionButton("update_button", "Atualizar")
 Row {.tabset}
 -----------------------------------------------------------------------
 
-### Produtos
+### Dias da semana 
 
-```{r echo =FALSE}
+```{r echo = FALSE}
+
+plotOutput("days_chart")
 
 
-plotOutput("sales_line")
+
+```
+
+
+```{r echo = FALSE}
+
+plotOutput("holiday_chart")
+
 
 ```
 
 
 ```{r warning=FALSE, context="server"}
 
-prod_summary <- reactive({
+selected_products <- reactive({
   
-  clicks <- input$update_button
+  clicks <- input$update_button_2
   
 isolate({  
-
-#prod_summary <- 
-  rt_filter %>% 
-  filter(description %in% input$prod_id) %>% 
-  #filter(description %in% c("12 PENCILS SMALL TUBE SKULL")) %>% 
-  group_by(month_year, description) %>% 
-  summarise(across(c("quantity", "total_investment", "total_revenue"), ~sum(.x, na.rm = T)),
-            across(c("unit_price", "nps"), ~mean(.x, na.rm = T)))
-
-
-#prod_summary %>% glimpse
+  
+ if("ALL" %in% input$prod_id){products}else{input$prod_id}
+  
+  
+ #if("ALL" %in% prod_list){products}else{prod_list}
   
 })})
 
-
-selected_col <- reactive({
+selected_col_2 <- reactive({
   
-    clicks <- input$update_button
+    clicks <- input$update_button_2
   
   isolate({
   
-    cols_map %>% 
+    cols_prod %>% 
       #filter(name == "Quantidade") %>% 
-      filter(name == input$var_id) %>% 
+      filter(name == input$var_id_2) %>% 
       pull(col)
   
 })})
 
-
-output$sales_line <- renderPlot({
+rt_days <- reactive({
   
-  clicks <- input$update_button
+  clicks <- input$update_button_2
+  
+isolate({  
+
+rt_mission %>% 
+   mutate(dow = wday(date, label = T, abbr = T),
+          full_hour = hour(time),
+          holiday = as.factor(holiday)) %>% 
+  filter(description %in% selected_products()) %>%
+  group_by(dow, full_hour, holiday) %>% 
+  summarise(unit_price = sum(unit_price * quantity)/sum(quantity),
+            tkts = n_distinct(invoice_no),
+            clients = n_distinct(customer_id),
+            nps = mean(nps),
+            across(c("quantity", "total_investment", "total_revenue"),
+                   ~sum(.x, na.rm = T)))
+})})
+
+output$days_chart <- renderPlot({
+  
+    clicks <- input$update_button_2
   
 isolate({  
   
-  #prod_summary() %>% 
-  prod_summary %>% 
-    ggplot(aes(x = month_year, 
-               #y = selected_col(), 
-               y = quantity, 
-               color = description)) +
-    geom_line() +
-    labs(y = input$var_id, x = "")
-    
- # prod_summary() %>%  
- #   hchart(., "line", 
- #          hcaes(x = month_year, 
- #                y = selected,
- #                group = description,
- #                y = quantity
- #                )) %>% 
- #   hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
+col <- selected_col_2()
   
-  })})
+rt_days() %>% 
+  filter(holiday == 0) %>% 
+  ggplot(aes(x = dow, y = full_hour, fill = col)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::label_number_si()) +
+  labs(x = "", y = "Hora", title = "Dias Normais"#, fill = input$var_id_2
+       )
+  })
+
+#rt_days %>% 
+#  filter(holiday == 0) %>% 
+#  ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
+#  geom_tile() +
+#  scale_fill_viridis_c(labels = scales::label_number_si()) + 
+#  labs(x = "", y = "Hora", title = "Feriados")
 
 
+})
+
+
+output$holiday_chart <- renderPlot({
+  
+    clicks <- input$update_button_2
+  
+isolate({  
+  
+rt_days() %>% 
+  filter(holiday == 1) %>% 
+  ggplot(aes(x = dow, y = full_hour, fill = selected_col_2())) +
+  geom_tile() +
+  #scale_fill_viridis_c(labels = scales::label_number_si()) +
+  labs(x = "", y = "Hora", title = "Feriados", #fill = input$var_id_2
+       )
+  
+#rt_days %>% 
+#  filter(holiday == 1) %>% 
+#  ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
+#  geom_tile() +
+#  scale_fill_viridis_c(labels = scales::label_number_si()) +
+#  labs(x = "", y = "Hora", title = "Feriados")
+  
+  
+  })
+  
+  
+  
+})
+
+```
+
+
+### Evolução
+
+```{r echo =FALSE}
+
+
+#plotOutput("sales_line")
+
+```
+
+
+```{r warning=FALSE, context="server"}
+
+#output$sales_line <- renderPlot({
+#  
+#  clicks <- input$update_button
+#  
+#isolate({  
+#  
+#  #prod_summary() %>% 
+#  #prod_summary %>% 
+#  #  ggplot(aes(x = month_year, 
+#  #             #y = selected_col(), 
+#  #             y = quantity, 
+#  #             color = description)) +
+#  #  geom_line() +
+#  #  labs(y = input$var_id, x = "")
+#  #  
+# # prod_summary() %>%  
+# #   hchart(., "line", 
+# #          hcaes(x = month_year, 
+# #                y = selected,
+# #                group = description,
+# #                y = quantity
+# #                )) %>% 
+# #   hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
+#  
+#  })})
+#
 
 ```
 
