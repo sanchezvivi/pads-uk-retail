@@ -362,6 +362,8 @@ rt_days <- rt_mission %>%
             across(c("quantity", "total_investment", "total_revenue"),
                    ~sum(.x, na.rm = T)))
 
+test_col <- c()
+
 rt_days %>% 
   ggplot(aes(y = clients, x = full_hour, fill = holiday)) +
   geom_col(position = "dodge") +
@@ -370,7 +372,7 @@ rt_days %>%
 
 rt_days %>% 
   filter(holiday == 1) %>% 
-  ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
+  ggplot(aes(x = dow, y = full_hour, fill = get(cols_prod$col[1]))) +
   geom_tile() +
   scale_fill_viridis_c(labels = scales::label_number_si()) +
   labs(x = "", y = "Hora", title = "Feriados")
@@ -383,6 +385,16 @@ rt_days %>%
   scale_fill_viridis_c(labels = scales::label_number_si()) + 
   labs(x = "", y = "Hora", title = "Feriados")
   
+
+rt_days %>% 
+  filter(holiday == 0) %>% 
+  group_by(dow, full_hour) %>% 
+  summarise(sum(total_revenue))
+  hchart(., )
+  ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::label_number_si()) + 
+  labs(x = "", y = "Hora", title = "Feriados")
 
 
 ```
