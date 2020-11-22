@@ -11,7 +11,8 @@ runtime: shiny_prerendered
 ---
 
 ```{r setup, include=FALSE, warning=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_chunk$set(echo = FALSE)
 
 library(readxl)
 library(knitr)
@@ -36,10 +37,11 @@ library(viridisLite)
 library(tidyverse)
 library(tidytext)
 library(tidymodels)
-library(plyr)
+library(tidyverse)
+
+if(!require(dplyr)){install.packages("dplyr", "v0.7.8"); library(dplyr)}
 
 library(conflicted) 
-
 
 conflict_prefer("filter", "dplyr")
 conflict_prefer("mutate", "dplyr")
@@ -48,6 +50,10 @@ conflict_prefer("pivot_longer", "dplyr")
 conflict_prefer("starts_with", "dplyr")
 conflict_prefer("select", "dplyr")
 conflict_prefer("summarise", "dplyr")
+conflict_prefer("rename", "dplyr")
+conflict_prefer("across", "dplyr")
+conflict_prefer("group_by", "dplyr")
+
 
 today <- Sys.Date()
 
@@ -80,12 +86,12 @@ retail <- retail_raw %>%
 
 # Processamento ----------
 
-rt_summary <- retail %>%
+rt_summary <- retail %>% 
   group_by(country) %>% 
-  summarise(across(c("quantity", "total_investment", "total_revenue"),
+  dplyr::summarise(across(c("quantity", "total_investment", "total_revenue"),
                    ~sum(.x, na.rm = T)),
-            across(c("unit_price", "nps"), ~mean(.x, na.rm = T)),
-            tkts = n_distinct(invoice_no)) %>% 
+                  across(c("unit_price", "nps"), ~mean(.x, na.rm = T)),
+                  tkts = n_distinct(invoice_no)) %>% 
   mutate(perc_net = round(total_revenue*100/sum(total_revenue),1),
          perc_tkts = round(tkts*100/sum(tkts),1)) %>% 
   arrange(desc(total_revenue))
@@ -95,8 +101,6 @@ cols_map <- tibble(col = colnames(rt_summary %>%
                                     select(-starts_with("perc"))),
                name = c("Quantidade","Investimento Total","Receita Total", "Preço Unitário",
                         "NPS", "Ticket")) %>%  arrange(name)
-
-
 
 # Análise UK ------------
 
@@ -148,7 +152,7 @@ pca_prep <- rt_uk %>%
    select(-total_quantity_description) %>% 
    pivot_wider(names_from = description,
               values_from = total_quantity,
-              values_fill = list(total_quantity = 0))%>% #janitor::clean_names() %>% glimpse()
+              values_fill = list(total_quantity = 0)) %>% #janitor::clean_names() %>% glimpse()
   #RC: alterei "values_fill = 0" por "values_fill = list(values = 0)"
      select(1:501)
 
@@ -167,7 +171,7 @@ top_pca <- tidy_pca %>%
   filter(value^2 > mean(value^2)) %>%
   ungroup()
 
-skim(top_pca)
+#skim(top_pca)
 
 products <- top_pca %>% 
   filter(component %in% paste0("PC", 2)) %>% 
@@ -176,57 +180,40 @@ products <- top_pca %>%
 
 # Análise Produtos -------------
 
-rt_mission <-  retail %>% 
+rt_mission <- rt_uk %>% 
   filter(description %in% products) %>%
   mutate(month_year = as.Date(floor_date(date)),
          total_revenue = quantity * unit_price)
 
 
-cols_prod <- tibble(col = c("avg_price","tkts" ,"clients","quantity", "total_investment", "total_revenue" ),
+cols_prod <- tibble(col = c("avg_price","tkts" ,"clients","quantity", "total_investment", "total_revenue"),
                name = c("Preço Unitário","Pedidos","Clientes", "Quantidade",
                         "Investimento Total", "Receita Total")) %>% arrange(name)
-
-
 
 # Basket Analysis --------------
 
 #processamento da base
-itemList <- ddply(rt_uk,c("customer_id","date"), 
-                  function(df1)paste(df1$description, 
-                                     collapse = ","))
+# itemList <- ddply(rt_uk,c("customer_id","date"), 
+#                   function(df1)paste(df1$description, 
+#                                      collapse = ","))
+# 
+# itemList$CustomerID <- NULL
+# itemList$Date <- NULL
+# colnames(itemList) <- c("items")
+# 
+# write.csv(itemList,"output/market_basket.csv", quote = FALSE, row.names = TRUE)
 
-itemList$CustomerID <- NULL
-itemList$Date <- NULL
-colnames(itemList) <- c("items")
-
-write.csv(itemList,"market_basket.csv", quote = FALSE, row.names = TRUE)
-tr <- read.transactions('market_basket.csv', format = 'basket', sep=',')
+tr <- read.transactions('output/market_basket.csv', format = 'basket', sep=',')
 
 #regras de associacao
 rules <- apriori(tr, parameter = list(sup = 0.002, conf = 0.8))
-inspect(head(rules, n = 10, by = c("confidence", "lift")))
+#inspect(head(rules, n = 10, by = c("confidence", "lift")))
 
 #Filtrar as regras da missao de compra
 #PRECISA ATUALIZAR O df1$nome PELA LISTA DE PRODUTOS FOCO NOSSA
 rules.sub <- subset(rules, subset = rhs %in% products & lift > 2 )
-rules.sub
-inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
-
-
-```
-
-
-```{r}
-#Grafico ARULES
-plot(rules.sub,
-     engine = 'visNetwork',
-     method = 'graph')
-     #control = list(nodeCol='darkblue'))
-
-```
-
-
-
+#rules.sub
+#inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
 
 
 # Recomendação --------------
@@ -368,7 +355,6 @@ rt_uk %>%
   summarise(Quantidade = sum(quantity), Receita = sum(total_revenue)) %>% 
   arrange(desc(Receita)) %>% kable()
 
-
 ```
 
 
@@ -440,10 +426,9 @@ tickets %>%
 
 ### Preços
 
-
 ```{r}
 
-highchartOutput("histogram")
+plotOutput("histogram")
 
 ```
 
@@ -462,7 +447,7 @@ selected_col <- reactive({
   
 })})
 
-output$histogram <- renderHighchart({
+output$histogram <- renderPlot({
   
   clicks <- input$update_button
   
@@ -476,7 +461,7 @@ ggplot(aes(x = unit_price)) +
    geom_vline(aes(xintercept=mean(unit_price)),
             color="red", linetype="dashed", size=1) +
   #theme_economist() +
-  labs(title = "Preço por Produto",x = "Preco", y = "Produto")
+  labs(title = "Preço por Produto",x = "Preço", y = "Produto")
 
 })})
  
@@ -512,9 +497,9 @@ Parâmetros {.sidebar}
 
 selectInput("var_id_2", label = "Variável", choices = cols_prod$name,
             multiple = F,
-            selected = cols_prod$name[1])
+            selected = cols_prod$name[5])
 
-selectInput("prod_id", label = "Produto", choices = append("ALL", products),
+selectInput("prod_id", label = "Selecione o produto", choices = append("ALL", products),
             multiple = T,
             selected = "ALL")
 
@@ -533,15 +518,13 @@ Row {.tabset}
 
 plotOutput("days_chart")
 
-
-
 ```
 
+### Feriados
 
 ```{r echo = FALSE}
 
 plotOutput("holiday_chart")
-
 
 ```
 
@@ -567,10 +550,12 @@ selected_col_2 <- reactive({
   
   isolate({
   
+    
     cols_prod %>% 
       #filter(name == "Quantidade") %>% 
       filter(name == input$var_id_2) %>% 
       pull(col)
+    
   
 })})
 
@@ -586,7 +571,7 @@ rt_mission %>%
           holiday = as.factor(holiday)) %>% 
   filter(description %in% selected_products()) %>%
   group_by(dow, full_hour, holiday) %>% 
-  summarise(unit_price = sum(unit_price * quantity)/sum(quantity),
+  dplyr::summarise(unit_price = sum(unit_price * quantity)/sum(quantity),
             tkts = n_distinct(invoice_no),
             clients = n_distinct(customer_id),
             nps = mean(nps),
@@ -601,14 +586,15 @@ output$days_chart <- renderPlot({
 isolate({  
   
 col <- selected_col_2()
+
+print(col)
   
 rt_days() %>% 
   filter(holiday == 0) %>% 
-  ggplot(aes(x = dow, y = full_hour, fill = col)) +
+  ggplot(aes(x = dow, y = full_hour, fill = get(selected_col_2()))) +
   geom_tile() +
   scale_fill_viridis_c(labels = scales::label_number_si()) +
-  labs(x = "", y = "Hora", title = "Dias Normais"#, fill = input$var_id_2
-       )
+  labs(x = "", y = "Hora", title = "Dias Normais", fill = input$var_id_2)
   })
 
 #rt_days %>% 
@@ -630,10 +616,10 @@ isolate({
   
 rt_days() %>% 
   filter(holiday == 1) %>% 
-  ggplot(aes(x = dow, y = full_hour, fill = selected_col_2())) +
+  ggplot(aes(x = dow, y = full_hour, fill = get(selected_col_2()))) +
   geom_tile() +
   #scale_fill_viridis_c(labels = scales::label_number_si()) +
-  labs(x = "", y = "Hora", title = "Feriados", #fill = input$var_id_2
+  labs(x = "", y = "Hora", title = "Feriados", fill = input$var_id_2
        )
   
 #rt_days %>% 
@@ -648,6 +634,37 @@ rt_days() %>%
   
   
   
+})
+
+```
+
+
+### Dias da semana 2
+
+```{r}
+
+plotOutput("days_bar")
+
+
+```
+
+
+```{r context = "server"}
+
+
+output$days_bar <- renderPlot({
+  
+    clicks <- input$update_button_2
+  
+  isolate({
+  
+rt_days() %>% 
+  ggplot(aes(y = get(selected_col_2()), x = full_hour, fill = holiday)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~dow, nrow = 3)
+  
+  })
+    
 })
 
 ```
@@ -698,10 +715,18 @@ rt_days() %>%
 Regras de Associação
 =====================================  
 
-Parâmetros {.sidebar}
+Row {.tabset}
 -----------------------------------------------------------------------
 
-```{r}
+### Rede de Produtos
+
+```{r echo = FALSE}
+
+#Grafico ARULES
+plot(rules.sub,
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
 
 ```
 
