@@ -39,8 +39,6 @@ library(tidytext)
 library(tidymodels)
 library(tidyverse)
 
-if(!require(dplyr)){install.packages("dplyr", "v0.7.8"); library(dplyr)}
-
 library(conflicted) 
 
 conflict_prefer("filter", "dplyr")
@@ -59,7 +57,7 @@ today <- Sys.Date()
 
 theme_set(theme_minimal())
 theme_update(text = element_text(family = "Open Sans"),
-             plot.title = element_text(face = "bold", size = 18,
+             plot.title = element_text(face = "bold", size = 20,
                                        color = "#1d3752"),
              legend.position = "bottom")
 
@@ -129,30 +127,53 @@ foras2 <- clientes %>%
   filter(Tkt > 100) %>% 
   pull(customer_id)
 
-rt_uk <- retail %>% 
+rt_uk_prep <- retail %>% 
   filter(country == "United Kingdom") %>% 
   filter(!invoice_no %in% foras) %>% 
   filter(!customer_id %in% foras2)
 
 # Categorização --------------
 
+colours <- str_c(str_to_upper(colors()), collapse="|")
 
+numbers <- str_c(c("1","2","3","4","5","6","7","8","9","0"), collapse="|")
 
+#stop_words <- str_c(get_stopwords()[1], collapse="|")
+size <- str_c(str_to_upper(c('small', 'large', 'jumbo', 'box', 'pack', 'cases', 'kit')), collapse="|")
+material <- str_c(str_to_upper(c('metal','wooden', 'wood', 'glass', 'silver', 'ceramic')), collapse="|")
+stopword <- str_c(str_to_upper(c('set','of', 'with', 'and', 'colour')), collapse="|")
+
+filters <- str_c(c(size, material, stopword, colours, numbers), collapse = "|")
+
+rt_uk <- rt_uk_prep %>% 
+  mutate(product = str_replace_all(description, filters,""),
+         product = str_replace_all(product, "\\W", " "),
+         product = str_replace_all(product, "\\s+$", ""),
+         product = str_replace_all(product, "^\\s+", ""),
+         product = str_replace_all(product, "\\s+", " "))
+ 
+
+# Falta colocar para tirar espaço do inicio ou do final
+  
+head(retail_2$Description_2,5)
+tail(retail_2$Description_2,5)
 
 # PCA -------------
 
 pca_prep <- rt_uk %>% 
-   group_by(invoice_no,description) %>% 
+   group_by(invoice_no, product) %>% 
    summarise(total_quantity = sum(quantity),.groups = "drop") %>% 
    arrange(total_quantity %>% desc()) %>%
-   group_by(description) %>%
+   group_by(product) %>%
    mutate(total_quantity_description = sum(total_quantity)) %>% 
    arrange(total_quantity_description %>% desc()) %>% 
    ungroup() %>% 
    select(-total_quantity_description) %>% 
-   pivot_wider(names_from = description,
+   pivot_wider(names_from = product,
               values_from = total_quantity,
-              values_fill = list(total_quantity = 0)) %>% #janitor::clean_names() %>% glimpse()
+              #values_fill = list(total_quantity = 0)
+              values_fill = 0
+              ) %>% #janitor::clean_names() %>% glimpse()
   #RC: alterei "values_fill = 0" por "values_fill = list(values = 0)"
      select(1:501)
 
@@ -171,10 +192,10 @@ top_pca <- tidy_pca %>%
   filter(value^2 > mean(value^2)) %>%
   ungroup()
 
-#skim(top_pca)
+skim(top_pca)
 
 products <- top_pca %>% 
-  filter(component %in% paste0("PC", 2)) %>% 
+  filter(component %in% paste0("PC", 5)) %>% 
   arrange(desc(value)) %>% 
   pull(terms)
 
@@ -186,7 +207,8 @@ rt_mission <- rt_uk %>%
          total_revenue = quantity * unit_price)
 
 
-cols_prod <- tibble(col = c("avg_price","tkts" ,"clients","quantity", "total_investment", "total_revenue"),
+cols_prod <- tibble(col = c("avg_price","tkts" ,"clients",
+                            "quantity", "total_investment", "total_revenue"),
                name = c("Preço Unitário","Pedidos","Clientes", "Quantidade",
                         "Investimento Total", "Receita Total")) %>% arrange(name)
 
@@ -214,7 +236,6 @@ rules <- apriori(tr, parameter = list(sup = 0.002, conf = 0.8))
 rules.sub <- subset(rules, subset = rhs %in% products & lift > 2 )
 #rules.sub
 #inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
-
 
 # Recomendação --------------
 
