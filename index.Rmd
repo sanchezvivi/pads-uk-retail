@@ -41,14 +41,13 @@ library(plyr)
 library(conflicted) 
 
 
-
 conflict_prefer("filter", "dplyr")
 conflict_prefer("mutate", "dplyr")
 conflict_prefer("arrange", "dplyr")
 conflict_prefer("pivot_longer", "dplyr")
 conflict_prefer("starts_with", "dplyr")
 conflict_prefer("select", "dplyr")
-
+conflict_prefer("summarise", "dplyr")
 
 today <- Sys.Date()
 
@@ -149,7 +148,8 @@ pca_prep <- rt_uk %>%
    select(-total_quantity_description) %>% 
    pivot_wider(names_from = description,
               values_from = total_quantity,
-              values_fill = 0)%>% #janitor::clean_names() %>% glimpse()
+              values_fill = list(total_quantity = 0))%>% #janitor::clean_names() %>% glimpse()
+  #RC: alterei "values_fill = 0" por "values_fill = list(values = 0)"
      select(1:501)
 
 rec_pca <- recipe( ~ ., data = pca_prep) %>% 
@@ -192,7 +192,7 @@ cols_prod <- tibble(col = c("avg_price","tkts" ,"clients","quantity", "total_inv
 
 #processamento da base
 itemList <- ddply(rt_uk,c("customer_id","date"), 
-                  function(df1)paste(df1$Description, 
+                  function(df1)paste(df1$description, 
                                      collapse = ","))
 
 itemList$CustomerID <- NULL
@@ -208,7 +208,8 @@ inspect(head(rules, n = 10, by = c("confidence", "lift")))
 
 #Filtrar as regras da missao de compra
 #PRECISA ATUALIZAR O df1$nome PELA LISTA DE PRODUTOS FOCO NOSSA
-rules.sub <- subset(rules, subset = rhs %in% df1$nome & lift > 2 )
+rules.sub <- subset(rules, subset = rhs %in% products & lift > 2 )
+rules.sub
 inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
 
 
@@ -217,7 +218,7 @@ inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
 
 ```{r}
 #Grafico ARULES
-plot(rules.sub[1:100],
+plot(rules.sub,
      engine = 'visNetwork',
      method = 'graph')
      #control = list(nodeCol='darkblue'))
