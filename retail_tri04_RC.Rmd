@@ -1,0 +1,449 @@
+---
+title: "Análise de cesta de Compras"
+author: "Debora, Renato, Viviane"
+date: "27/11/2020"
+output: html_document
+---
+
+
+
+
+# Objetivo
+
+O time de negócio de um varejista online do Reino Unido precisa aumentar suas vendas.
+
+Para isso, vamos fazer uma análise do comportamento de suas vendas para fazer uma sugestão de campanha de impulsionamento de vendas por associação de produtos.
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Bibliotecas
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(plyr)
+library(readxl)
+library(knitr)
+
+library(outliers)
+
+library(ggplot2)
+library(ggthemes)
+library(skimr)
+library(lubridate)
+
+library(arules)
+library(arulesViz)
+
+library(tidytext)
+
+library(devtools)
+library(factoextra)
+
+```
+<br>
+<br>
+<br>
+# Preparação da Base
+
+```{r}
+#Base
+retail <- read_csv("data/retail.csv")
+retial_raw <- retail
+
+#ajuste do campo Description
+retail$Description <- gsub(",","|", retail$Description)
+
+#Criacao da variavel Vendas em dinheiro
+retail <- retail %>% mutate(net = Quantity * UnitPrice)
+
+#conversao de tipo de variavel
+retail$InvoiceNo <- as.character(retail$InvoiceNo)
+retail$CustomerID <- as.character(retail$CustomerID)
+
+```
+
+<br>
+<br>
+<br>
+# Descrição das Vendas
+
+## Vendas gerais
+
+```{r}
+skim(retail)
+```
+<br>
+A visão geral do banco de dados no período de Dez/2010 e Dez/2011:
+
+37     Países
+4.334  Clientes
+3.659  Produtos
+18.402 Transações
+
+<br>
+
+# Analise de Países
+
+```{r}
+retail %>% 
+  dplyr:: group_by(retail$Country) %>%
+  dplyr:: summarise(Qty = sum(Quantity), Net = sum(net),Tkts = length(unique(InvoiceNo))) %>% 
+  dplyr::mutate(perc.net = round(Net*100/sum(Net),1),perc.tkts = round(Tkts*100/sum(Tkts),1) ) %>% 
+  arrange(desc(Net))
+
+retail %>% 
+  dplyr:: group_by(Country) %>%
+  dplyr:: summarise(Qty = sum(Quantity), Net = sum(net),Tkts = length(unique(InvoiceNo))) %>% 
+  dplyr::mutate(perc.net = round(Net*100/sum(Net),1),perc.tkts = round(Tkts*100/sum(Tkts),1) ) %>% 
+  dplyr:: select(Country,perc.net,perc.tkts) %>% 
+  arrange(desc(perc.net)) %>% 
+  ggplot(aes(x= reorder(Country,-perc.net) ,y=perc.net))+geom_col()+
+  theme_economist()+theme(axis.text.x=element_blank(),axis.ticks.x=element_blank())+
+  labs(title = "Faturamento por país",x = "País", y = "% Faturamento")+
+   coord_cartesian(ylim = c(0,100))
+
+retail %>% 
+  dplyr:: group_by(Country) %>%
+  dplyr:: summarise(Qty = sum(Quantity), Net = sum(net),Tkts = length(unique(InvoiceNo))) %>% 
+  dplyr::mutate(perc.net = round(Net*100/sum(Net),1),perc.tkts = round(Tkts*100/sum(Tkts),1) ) %>% 
+  dplyr:: select(Country,perc.net,perc.tkts) %>% 
+  arrange(desc(perc.net)) %>% 
+  ggplot(aes(x= reorder(Country,-perc.tkts) ,y=perc.tkts))+geom_col()+
+  theme_economist()+theme(axis.text.x=element_blank(),axis.ticks.x=element_blank())+
+  labs(title = "Transações por país",x = "País", y = "% Transações") +
+   coord_cartesian(ylim = c(0,100))
+
+
+
+retail <- retail %>% dplyr::filter(Country == "United Kingdom")
+
+```
+
+Vemos que o Reino Unido concentra 82.9% do faturamento e 90% das transações.<br>
+Dessa maneira, iremos trabalhar apenas com essa região, pois focando em um país podemos ter maior consistência de comportamento dos clientes. Além disso, temos poucas transações nos demais países para termos uma visão isolada deles.
+<br>
+
+
+## Maiores Vendas
+
+```{r}
+
+retail %>% 
+  dplyr:: group_by(retail$StockCode,retail$Description) %>%
+  dplyr:: summarise(Qty = sum(Quantity), Net = sum(net)) %>% 
+  arrange(desc(Net))
+
+
+```
+
+
+## Vendas por transação
+
+Quantidade de Produto
+
+```{r}
+
+#Dataframe agrupado por Ticket
+tickets <- retail %>% 
+  dplyr:: group_by(retail$InvoiceNo) %>%
+  dplyr:: summarise(Qty = sum(Quantity), Net = sum(net)) %>% 
+  arrange(desc(Net))
+
+#Gráfico DIspersão Quantidade Produto
+ggplot(tickets, aes(x=Qty)) + geom_histogram(binwidth=50) + coord_cartesian(xlim = c(0, 2000))+
+  geom_vline(aes(xintercept=median(Qty)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(Qty)),
+            color="red", linetype="dashed", size=1)+
+  theme_economist()+
+  labs(title = "Produtos por transação",x = "Qtd produtos", y = "Transações")
+
+
+mean(tickets$Qty)
+median(tickets$Qty)
+
+
+```
+
+<br>
+Faturamento por Produto
+
+```{r}
+
+#Quantos dinheiros por transação?
+
+ggplot(tickets, aes(x=Net)) + geom_histogram(binwidth=100) + coord_cartesian(xlim = c(0, 3000))+
+  geom_vline(aes(xintercept=median(Net)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(Net)),
+            color="red", linetype="dashed", size=1)+
+  theme_economist()+
+  labs(title = "Faturamento por transação",x = "Faturamentos", y = "Transações")
+
+
+ ggplot(tickets, aes(y=Net)) + 
+  geom_boxplot()
+
+
+mean(tickets$Net)
+median(tickets$Net)
+
+
+```
+
+
+Vemos que os tickets apresentam uma distribuição assimétrica com uma cauda longa a direita, ou seja temos grande quantidade de tickets com valores elevados, deslocando, assim, a média da mediana.
+
+Para nossa análise, faremos exclusão das compras a cima de $50k que demostram um comportamento atípico.
+
+
+```{r}
+foras <- tickets %>% dplyr::filter(Net > 50000) %>% dplyr::select("retail$InvoiceNo") %>% unique()
+
+retail<- retail %>% dplyr::filter(!InvoiceNo %in% foras$`retail$InvoiceNo` )
+
+```
+
+
+
+<br>
+## Análise de preço
+
+```{r}
+
+skim(retail$UnitPrice)
+
+ggplot(retail, aes(x = UnitPrice)) + geom_histogram(binwidth = 1) + coord_cartesian(xlim = c(0, 20))+
+  geom_vline(aes(xintercept=median(UnitPrice)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(UnitPrice)),
+            color="red", linetype="dashed", size=1)+
+  theme_economist()+
+  labs(title = "Preço por Produto",x = "Preco", y = "Produto")
+
+
+ ggplot(retail, aes(y=UnitPrice)) + 
+  geom_boxplot()
+
+
+```
+
+Preços de produtos também apresentam assimetria com calda longa a esquerda, mas para o modelo de cestas não achamos necessário fazer nenhum filtro.
+
+
+<br>
+## Analise de clientes
+
+```{r}
+clientes <- retail %>% 
+  dplyr:: group_by(CustomerID,InvoiceNo) %>%
+  dplyr:: summarise(Tkt = length(unique(InvoiceNo)) ,Qty = sum(Quantity), Net = sum(net)) %>%
+  dplyr:: group_by(CustomerID) %>%
+  dplyr:: summarise(Tkt = sum(Tkt) ,Qty = sum(Qty), Net = sum(Net)) %>%
+  arrange(desc(Net))
+
+
+ggplot(clientes, aes(x=Tkt)) + geom_histogram(binwidth=1) + coord_cartesian(xlim = c(0, 35))+
+  geom_vline(aes(xintercept=median(Tkt)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(Tkt)),
+            color="red", linetype="dashed", size=1)+
+  theme_economist()+
+  labs(title = "Pedido por cliente",x = "Pedidos", y = "Clientes")
+
+
+mean(clientes$Tkt)
+median(clientes$Tkt)
+
+
+
+ ggplot(clientes, aes(y=Tkt)) + 
+  geom_boxplot()
+
+
+```
+
+ Vemos que os clientes também possuem uma dispersão assimétirca com muitos clientes fazendo um grande número de pedidos.
+ 
+Para nossa análise decidimos tirar os casos mais atípicos, traçando um corte em de clientes até 100 pedidos.
+ 
+```{r}
+foras2 <- clientes %>% filter(Tkt > 100) %>% select(CustomerID)
+retail<- retail %>% dplyr::filter(!CustomerID %in% foras2$CustomerID )
+```
+
+<br>
+
+# Agrupamento dos produtos
+
+
+```{r}
+to_pca <- retail %>% 
+   dplyr::group_by(InvoiceNo,Description) %>% 
+   dplyr::summarise(total_quantity = sum(Quantity),.groups = "drop") %>% 
+   dplyr::arrange(total_quantity %>% desc()) %>%
+   dplyr::group_by(Description) %>%
+   dplyr::mutate(total_quantity_description = sum(total_quantity)) %>% 
+   dplyr::arrange(total_quantity_description %>% desc()) %>% 
+   dplyr::ungroup() %>% 
+   dplyr::select(-total_quantity_description) %>% 
+   pivot_wider(names_from = Description,
+              values_from = total_quantity)
+```
+
+
+PCA top 500 products
+```{r}
+
+to_pca <- to_pca %>% mutate_all(funs(replace_na(., 0)))
+
+to_pca2 <- to_pca[,3:500]
+pca_model <- prcomp(to_pca2, center = TRUE,scale. = TRUE)
+
+plot(pca_model)
+
+```
+
+
+
+```{r}
+
+df <- as.data.frame( pca_model$rotation[,1:5])
+
+tb <- as_tibble( pca_model$rotation[,1:5])
+ 
+df1 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC1^2 > mean(PC1^2)) %>% select(c(PC1,nome))
+#COMIDA E LANCHES
+                                              
+df2 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC2^2 > mean(PC2^2)) %>% select(c(PC2,nome))
+#ITENS DE COZINHA
+
+df3 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC3^2 > mean(PC3^2)) %>% select(c(PC3,nome))
+#ITEM ESCOLAR
+
+df4 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC4^2 > mean(PC4^2)) %>% select(c(PC4,nome))
+#PRESENTES DA VOVÓ
+
+df5 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC5^2 > mean(PC5^2)) %>% select(c(PC5,nome))
+#PRESENTES IMAGINARIUM
+
+skim(df)
+mean(df$PC1)
+
+```
+
+
+```{r}
+pca_model
+  
+```
+
+# Regra de associação
+
+```{r}
+itemList <- ddply(retail,c("CustomerID","Date"), 
+                  function(df1)paste(df1$Description, 
+                                     collapse = ","))
+
+# remover campos desnecessarios
+itemList$CustomerID <- NULL
+itemList$Date <- NULL
+colnames(itemList) <- c("items")
+
+write.csv(itemList,"market_basket.csv", quote = FALSE, row.names = TRUE)
+
+tr <- read.transactions('market_basket.csv', format = 'basket', sep=',')
+tr
+summary(tr)
+```
+
+
+```{r}
+
+rules <- apriori(tr, parameter = list(sup = 0.002, conf = 0.8))
+rules
+inspect(head(rules, n = 10, by = c("confidence", "lift")))
+
+df5$nome[20] = "JUMBO BAG 50S CHRISTMAS"
+rules.sub <- subset(rules, subset = rhs %in% df5$nome & lift > 2 )
+rules.sub
+inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
+
+```
+
+
+
+
+
+
+```{r}
+
+plot(rules.sub[1:100],
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
+
+
+```
+
+
+```{r}
+
+plot(rules.sub[100:200],
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
+
+
+```
+
+
+
+
+
+```{r}
+
+plot(rules.sub[200:285],
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
+
+
+```
+
+
+
+
+
+# TESTE DE AGRUPAMENTO DE PRODUTOS
+
+
+groups <- list()
+x <-  unique(retail$Description)
+
+i <- 1
+while(length(x) > 0)
+{
+  id <- agrep(x[1], x, ignore.case = TRUE, max.distance = 0.3)
+  groups[[i]] <- x[id]
+  x <- x[-id]
+  i <- i + 1
+}
+
+head(groups, n = 20)
+groups2 <- as.data.frame(groups)
+
+
+
+
+
+
+
+
+
+
+

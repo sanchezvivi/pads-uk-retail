@@ -7,7 +7,7 @@ output:
     orientation: rows
     vertical_layout: fill
     theme: lumen
-runtime: shiny_prerendered
+runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
@@ -43,17 +43,24 @@ library(conflicted)
 conflict_prefer("filter", "dplyr")
 conflict_prefer("mutate", "dplyr")
 conflict_prefer("arrange", "dplyr")
+conflict_prefer("pivot_longer", "dplyr")
+conflict_prefer("starts_with", "dplyr")
+conflict_prefer("select", "dplyr")
 
 
 today <- Sys.Date()
 
 theme_set(theme_minimal())
 theme_update(text = element_text(family = "Open Sans"),
-             plot.title = element_text(face = "bold", size = 23,
+             plot.title = element_text(face = "bold", size = 18,
                                        color = "#1d3752"),
              legend.position = "bottom")
 
 options(digits=4)
+
+hc_cols <- c("#7cb5ec", "#434348", "#90ed7d", "#f7a35c", 
+             "#8085e9", "#f15c80", "#e4d354", "#2b908f", 
+             "#f45b5b", "#91e8e1")
 
 ```
 
@@ -66,14 +73,67 @@ retail_raw <- read_csv("data/retail.csv")
 
 retail <- retail_raw %>% 
   clean_names() %>%
-  mutate(description = str_replace(description, ",","|"))
+  mutate(description = str_replace(description, ",","|")) %>% 
+  mutate(month_year = as.Date(floor_date(date)),
+         total_revenue = quantity * unit_price)
 
 ### Processamento
+
+rt_summary <- retail %>%
+  group_by(country) %>% 
+  summarise(across(c("quantity", "total_investment", "total_revenue"),
+                   ~sum(.x, na.rm = T)),
+            across(c("unit_price", "nps"), ~mean(.x, na.rm = T)),
+            tkts = n_distinct(invoice_no)) %>% 
+  mutate(perc_net = round(total_revenue*100/sum(total_revenue),1),
+         perc_tkts = round(tkts*100/sum(tkts),1)) %>% 
+  arrange(desc(total_revenue))
+
+cols_map <- tibble(col = colnames(rt_summary %>% 
+                                    select(where(is.numeric)) %>% 
+                                    select(-starts_with("perc"))),
+               name = c("Quantidade","Investimento Total","Receita Total", "Preço Unitário",
+                        "NPS", "Ticket"))
+
+
+
+### Análise UK
+
+
+group_tb <- tibble(group_name = c("Pedido", "Cliente", "Produto"),
+                   col_name = c("invoice_no", "customer_id","description"))
+
+tickets <- retail %>% 
+  filter(country == "United Kingdom") %>% 
+  group_by(invoice_no) %>%
+  summarise(Quantidade = sum(quantity), Receita = sum(total_revenue)) %>% 
+  arrange(desc(Receita))
+
+foras <- tickets %>% 
+  filter(Receita > 50000) %>%
+  select(invoice_no) %>% unique() %>% 
+  pull(invoice_no)
+
+clientes <- retail %>% 
+  group_by(customer_id,invoice_no) %>%
+  summarise(Tkt = length(unique(invoice_no)) ,Qty = sum(quantity), Net = sum(total_revenue)) %>%
+  group_by(customer_id) %>%
+  summarise(Tkt = sum(Tkt) ,Qty = sum(Qty), Net = sum(Net)) %>%
+  arrange(desc(Net))
+
+foras2 <- clientes %>% 
+  filter(Tkt > 100) %>% 
+  pull(customer_id)
+
+rt_uk <- retail %>% 
+  filter(country == "United Kingdom") %>% 
+  filter(!invoice_no %in% foras) %>% 
+  filter(!customer_id %in% foras2)
 
 
 ### PCA
 
-pca_prep <- retail %>% 
+pca_prep <- rt_uk %>% 
    group_by(invoice_no,description) %>% 
    summarise(total_quantity = sum(quantity),.groups = "drop") %>% 
    arrange(total_quantity %>% desc()) %>%
@@ -109,22 +169,10 @@ products <- top_pca %>%
 
 #### 
 
-
 rt_filter <-  retail %>% 
   filter(description %in% products) %>%
-  #filter(description %in% input$prod_id) %>% 
   mutate(month_year = as.Date(floor_date(date)),
-         total_revenue = sum(quantity * unit_price)) %>% glimpse
-
-rt_summary <- rt_filter %>% 
-  group_by(country) %>% 
-  summarise(across(c("quantity", "total_investment", "total_revenue"), ~sum(.x, na.rm = T)),
-            across(c("unit_price", "nps"), ~mean(.x, na.rm = T)))
-
-
-cols <- tibble(col = colnames(rt_summary %>% select(is.numeric)),
-               name = c("Quantidade","Investimento Total", "Preço Unitário",
-                        "NPS","Receita Total"))
+         total_revenue = sum(quantity * unit_price))
 
 ### Basket Analysis
 
@@ -133,6 +181,8 @@ cols <- tibble(col = colnames(rt_summary %>% select(is.numeric)),
 #
 
 ### Recomendação
+
+
 
 
 ```
@@ -152,6 +202,7 @@ Introdução
 
 
 
+
 ```
 
 
@@ -161,7 +212,18 @@ Análise Geral
 Parâmetros {.sidebar}
 -----------------------------------------------------------------------
 
-```{r}
+```{r echo = FALSE}
+
+selectInput("var_id", label = "Variável", choices = cols_map$name,
+            multiple = F,
+            selected = "Receita Total")
+
+selectInput("group_id", label = "Agrupamento", choices = group_tb$group_name,
+            multiple = F,
+            selected = "Pedido")
+
+
+actionButton("update_button", "Atualizar")
 
 
 ```
@@ -170,29 +232,205 @@ Parâmetros {.sidebar}
 Row {.tabset}
 -----------------------------------------------------------------------
 
-### Gráfico 1
+### Mapa Geral
 
+```{r echo=FALSE}
+
+highchartOutput("sales_map")
+
+```
 
 ```{r warning=FALSE, context="server"}
 
+selected_col <- reactive({
+  
+    clicks <- input$update_button
+  
+  isolate({
+  
+    cols_map %>% 
+      #filter(name == "Quantidade") %>% 
+      filter(name == input$var_id) %>% 
+      pull(col)
+  
+})})
+
+output$sales_map <- renderHighchart({
+  
+  clicks <- input$update_button
+  
+isolate({  
+  
+  hcmap(
+    "custom/world-robinson-lowres", 
+    data = rt_summary,
+    name = input$var_id, 
+    #value = "total_revenue",
+    value = selected_col(),
+    borderWidth = 0,
+    nullColor = "#d3d3d3",
+    joinBy = c("name","country")) %>%
+  hc_colorAxis(
+    stops = color_stops(colors = viridisLite::inferno(10, begin = 0.1, direction = -1)),
+    type = "logarithmic") %>% 
+  hc_tooltip(valueDecimals = 2)
+  
+  })})
+
+```
+
+### Faturamento e Transações por país
+
+```{r echo = FALSE}
+
+#highchartOutput("sales_pct")
+#
+#```
+#
+#```{r warning=FALSE, context="server"}
+#
+#output$sales_line <- renderHighchart({
+  
+  rt_summary %>%  
+    select(country, starts_with("perc")) %>% 
+    pivot_longer(cols = starts_with("perc"),
+                 names_prefix = "perc_",
+                 names_to = "variable",
+                 values_to = "pct") %>% 
+    mutate(variable = if_else(variable == "net","Faturamento", "Transações")) %>% 
+    hchart(., "column", 
+           hcaes(x = country, #reorder(country,desc(perc_net)), 
+                 y = pct,
+                 group = variable)) %>% 
+    hc_xAxis(title = list(text = "País")) %>% 
+    hc_yAxis(title = list(text = ""),
+               labels = list(format = "{value}%"))
+  
+ # })
+
+```
+
+### Vendas por produto
+
+```{r echo=FALSE}
+
+rt_uk %>% 
+  group_by(description) %>%
+  summarise(Quantidade = sum(quantity), Receita = sum(total_revenue)) %>% 
+  arrange(desc(Receita)) %>% kable()
 
 
 ```
 
 
-### Gráfico 2
+### Distribuição por transação
 
-```{r}
+```{r echo = FALSE}
 
+#plotOutput("histogram")
+#
+#```
+#
+#
+#```{r warning=FALSE, context="server"}
+#
+#selected_group <- reactive({
+#  
+#    clicks <- input$update_button
+#  
+#  isolate({
+#  
+#    group_tb %>% 
+#      #filter(name == "Quantidade") %>% 
+#      filter(group_name == input$group_id) %>% 
+#      pull(col_name)
+#  
+#})})
+#
+#
+#output$histogram <- renderPlot({
+  
+#  clicks <- input$update_button
+#  
+#isolate({ 
+#
+#  retail %>% 
+#    filter(country == "United Kingdom") %>% 
+#    group_by(selected_group()) %>% 
+#    summarise(Total = sum(select_col())) %>% 
+#      ggplot(aes(x = Total)) + 
+#      geom_histogram(binwidth = 50) + 
+#      coord_cartesian(xlim = c(0, 2000))+
+#      geom_vline(aes(xintercept=median(Total)),
+#                color = hc_cols[1], linetype="dashed", size=1)+
+#      geom_vline(aes(xintercept=mean(Total)),
+#                color="red", linetype="dashed", size=1) +
+#      labs(title = "Produtos por transação", x = "Quantidade de produtos", y = "")
+    
+
+tickets %>% 
+   pivot_longer(cols = c("Quantidade","Receita"),
+                names_to = "variable",
+                values_to = "value") %>% 
+   group_by(variable) %>% 
+ ggplot(aes(x=value)) + 
+ geom_histogram(binwidth=50) + 
+ coord_cartesian(xlim = c(0, 2000))+
+ geom_vline(aes(xintercept=median(value)),
+           color = hc_cols[1], linetype="dashed", size=1)+
+ geom_vline(aes(xintercept=mean(value)),
+           color="red", linetype="dashed", size=1) +
+   facet_wrap(~variable, nrow = 2, scales = "free_y") +
+ labs(title = "Produtos por transação", x = "Quantidade de produtos", y = "")
+ 
+#})
+#})
 
 ```
 
 
-### Gráfico 3
+### Preços
+
 
 ```{r}
 
+highchartOutput("histogram")
 
+```
+
+```{r warning=FALSE, context="server"}
+
+selected_col <- reactive({
+  
+    clicks <- input$update_button
+  
+  isolate({
+  
+    cols_map %>% 
+      #filter(name == "Quantidade") %>% 
+      filter(name == input$var_id) %>% 
+      pull(col)
+  
+})})
+
+output$histogram <- renderHighchart({
+  
+  clicks <- input$update_button
+  
+isolate({ 
+  
+retail %>% 
+ggplot(aes(x = unit_price)) + 
+  geom_histogram(binwidth = 1) + coord_cartesian(xlim = c(0, 20))+
+  geom_vline(aes(xintercept=median(unit_price)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(unit_price)),
+            color="red", linetype="dashed", size=1)+
+  theme_economist()+
+  labs(title = "Preço por Produto",x = "Preco", y = "Produto")
+
+})})
+ 
 ```
 
 
@@ -223,7 +461,7 @@ Parâmetros {.sidebar}
 
 ```{r echo=FALSE}
 
-selectInput("var_id", label = "Variável", choices = cols$name,
+selectInput("var_id", label = "Variável", choices = cols_map$name,
             multiple = F,
             selected = "Receita Total")
 
@@ -278,7 +516,7 @@ selected_col <- reactive({
   
   isolate({
   
-    cols %>% 
+    cols_map %>% 
       #filter(name == "Quantidade") %>% 
       filter(name == input$var_id) %>% 
       pull(col)
@@ -296,7 +534,7 @@ isolate({
   prod_summary %>% 
     ggplot(aes(x = month_year, 
                #y = selected_col(), 
-               y = quantit, 
+               y = quantity, 
                color = description)) +
     geom_line() +
     labs(y = input$var_id, x = "")
@@ -311,63 +549,6 @@ isolate({
  #   hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
   
   })})
-
-
-
-```
-
-
-### Mapa
-
-```{r echo=FALSE}
-
-highchartOutput("sales_map")
-
-```
-
-```{r warning=FALSE, context="server"}
-
-selected_col <- reactive({
-  
-    clicks <- input$update_button
-  
-  isolate({
-  
-    cols %>% 
-      #filter(name == "Quantidade") %>% 
-      filter(name == input$var_id) %>% 
-      pull(col)
-  
-})})
-
-
-output$sales_map <- renderHighchart({
-  
-  clicks <- input$update_button
-  
-isolate({  
-  
-  hcmap(
-    "custom/world-robinson-lowres", 
-    data = rt_summary,
-    name = input$var_id, 
-    #value = "total_revenue",
-    value = selected_col(),
-    borderWidth = 0,
-    nullColor = "#d3d3d3",
-    joinBy = c("name","country")) %>%
-  hc_colorAxis(
-    stops = color_stops(colors = viridisLite::inferno(10, begin = 0.1, direction = -1)),
-    type = "logarithmic") %>% 
-  hc_tooltip(valueDecimals = 2)
-  
-  })})
-
-```
-
-### Gráfico 3
-
-```{r}
 
 
 

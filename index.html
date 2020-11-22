@@ -18,70 +18,6 @@
 
 <link rel="icon" href="data:image/x-icon;" type="image/x-icon">
 
-<style type="text/css">
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-</style>
 
 <script type="text/javascript">
 window.FlexDashboardComponents = [];
@@ -889,7 +825,8 @@ html, body {
 </div><!--/.container-->
 </div><!--/.navbar-->
 
-<img class="mobile-figure" data-mobile-figure-id=fig1 src="index_files/figure-html/unnamed-chunk-7-1.mb.png" />
+<img class="mobile-figure" data-mobile-figure-id=fig1 src="index_files/figure-html/unnamed-chunk-8-1.mb.png" />
+<img class="mobile-figure" data-mobile-figure-id=fig2 src="index_files/figure-html/unnamed-chunk-11-1.mb.png" />
 <script type="text/javascript">
 
 
@@ -2698,23 +2635,66 @@ window.FlexDashboardComponents.push({
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
+<p><div class="form-group shiny-input-container">
+<label class="control-label" for="var_id">Variável</label>
+<div>
+<select id="var_id"><option value="Quantidade">Quantidade</option>
+<option value="Investimento Total">Investimento Total</option>
+<option value="Receita Total" selected>Receita Total</option>
+<option value="Preço Unitário">Preço Unitário</option>
+<option value="NPS">NPS</option>
+<option value="Ticket">Ticket</option></select>
+<script type="application/json" data-for="var_id" data-nonempty="">{}</script>
+</div>
+</div><div class="form-group shiny-input-container">
+<label class="control-label" for="group_id">Agrupamento</label>
+<div>
+<select id="group_id"><option value="Pedido" selected>Pedido</option>
+<option value="Cliente">Cliente</option>
+<option value="Produto">Produto</option></select>
+<script type="application/json" data-for="group_id" data-nonempty="">{}</script>
+</div>
+</div><button id="update_button" type="button" class="btn btn-default action-button">Atualizar</button></p>
 </div>
 <div id="section-row" class="section level2 tabset">
 <h2 class="tabset">Row</h2>
-<div id="section-gráfico-1" class="section level3">
-<h3>Gráfico 1</h3>
+<div id="section-mapa-geral" class="section level3">
+<h3>Mapa Geral</h3>
+<div class="knitr-options" data-fig-width="576" data-fig-height="460">
+
+</div>
+<div id="sales_map" style="width:100%; height:400px; " class="highchart html-widget html-widget-output"></div>
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
 </div>
-<div id="section-gráfico-2" class="section level3">
-<h3>Gráfico 2</h3>
+<div id="section-faturamento-e-transações-por-país" class="section level3">
+<h3>Faturamento e Transações por país</h3>
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
+<div id="htmlwidget-ab757b25142efea2aeb9" style="width:100%;height:500px;" class="highchart html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ab757b25142efea2aeb9">{"x":{"hc_opts":{"chart":{"reflow":true},"title":{"text":null},"yAxis":{"title":{"text":""},"type":"linear","labels":{"format":"{value}%"}},"credits":{"enabled":false},"exporting":{"enabled":false},"boost":{"enabled":false},"plotOptions":{"series":{"label":{"enabled":false},"turboThreshold":0,"showInLegend":true},"treemap":{"layoutAlgorithm":"squarified"},"scatter":{"marker":{"symbol":"circle"}}},"series":[{"name":"Faturamento","data":[{"country":"United Kingdom","variable":"Faturamento","pct":82.9,"y":82.9,"name":"United Kingdom"},{"country":"Netherlands","variable":"Faturamento","pct":3.2,"y":3.2,"name":"Netherlands"},{"country":"EIRE","variable":"Faturamento","pct":2.9,"y":2.9,"name":"EIRE"},{"country":"Germany","variable":"Faturamento","pct":2.3,"y":2.3,"name":"Germany"},{"country":"France","variable":"Faturamento","pct":2.1,"y":2.1,"name":"France"},{"country":"Australia","variable":"Faturamento","pct":1.6,"y":1.6,"name":"Australia"},{"country":"Spain","variable":"Faturamento","pct":0.6,"y":0.6,"name":"Spain"},{"country":"Switzerland","variable":"Faturamento","pct":0.6,"y":0.6,"name":"Switzerland"},{"country":"Japan","variable":"Faturamento","pct":0.4,"y":0.4,"name":"Japan"},{"country":"Belgium","variable":"Faturamento","pct":0.4,"y":0.4,"name":"Belgium"},{"country":"Sweden","variable":"Faturamento","pct":0.4,"y":0.4,"name":"Sweden"},{"country":"Norway","variable":"Faturamento","pct":0.4,"y":0.4,"name":"Norway"},{"country":"Portugal","variable":"Faturamento","pct":0.3,"y":0.3,"name":"Portugal"},{"country":"Channel Islands","variable":"Faturamento","pct":0.2,"y":0.2,"name":"Channel Islands"},{"country":"Finland","variable":"Faturamento","pct":0.2,"y":0.2,"name":"Finland"},{"country":"Denmark","variable":"Faturamento","pct":0.2,"y":0.2,"name":"Denmark"},{"country":"Italy","variable":"Faturamento","pct":0.2,"y":0.2,"name":"Italy"},{"country":"Cyprus","variable":"Faturamento","pct":0.2,"y":0.2,"name":"Cyprus"},{"country":"Singapore","variable":"Faturamento","pct":0.1,"y":0.1,"name":"Singapore"},{"country":"Austria","variable":"Faturamento","pct":0.1,"y":0.1,"name":"Austria"},{"country":"Israel","variable":"Faturamento","pct":0.1,"y":0.1,"name":"Israel"},{"country":"Poland","variable":"Faturamento","pct":0.1,"y":0.1,"name":"Poland"},{"country":"Greece","variable":"Faturamento","pct":0.1,"y":0.1,"name":"Greece"},{"country":"Iceland","variable":"Faturamento","pct":0,"y":0,"name":"Iceland"},{"country":"USA","variable":"Faturamento","pct":0,"y":0,"name":"USA"},{"country":"Canada","variable":"Faturamento","pct":0,"y":0,"name":"Canada"},{"country":"Unspecified","variable":"Faturamento","pct":0,"y":0,"name":"Unspecified"},{"country":"Malta","variable":"Faturamento","pct":0,"y":0,"name":"Malta"},{"country":"United Arab Emirates","variable":"Faturamento","pct":0,"y":0,"name":"United Arab Emirates"},{"country":"Lebanon","variable":"Faturamento","pct":0,"y":0,"name":"Lebanon"},{"country":"Lithuania","variable":"Faturamento","pct":0,"y":0,"name":"Lithuania"},{"country":"European Community","variable":"Faturamento","pct":0,"y":0,"name":"European Community"},{"country":"Brazil","variable":"Faturamento","pct":0,"y":0,"name":"Brazil"},{"country":"RSA","variable":"Faturamento","pct":0,"y":0,"name":"RSA"},{"country":"Czech Republic","variable":"Faturamento","pct":0,"y":0,"name":"Czech Republic"},{"country":"Bahrain","variable":"Faturamento","pct":0,"y":0,"name":"Bahrain"},{"country":"Saudi Arabia","variable":"Faturamento","pct":0,"y":0,"name":"Saudi Arabia"}],"type":"column"},{"name":"Transações","data":[{"country":"United Kingdom","variable":"Transações","pct":90.1,"y":90.1,"name":"United Kingdom"},{"country":"Netherlands","variable":"Transações","pct":0.5,"y":0.5,"name":"Netherlands"},{"country":"EIRE","variable":"Transações","pct":1.4,"y":1.4,"name":"EIRE"},{"country":"Germany","variable":"Transações","pct":2.4,"y":2.4,"name":"Germany"},{"country":"France","variable":"Transações","pct":2.1,"y":2.1,"name":"France"},{"country":"Australia","variable":"Transações","pct":0.3,"y":0.3,"name":"Australia"},{"country":"Spain","variable":"Transações","pct":0.5,"y":0.5,"name":"Spain"},{"country":"Switzerland","variable":"Transações","pct":0.3,"y":0.3,"name":"Switzerland"},{"country":"Japan","variable":"Transações","pct":0.1,"y":0.1,"name":"Japan"},{"country":"Belgium","variable":"Transações","pct":0.5,"y":0.5,"name":"Belgium"},{"country":"Sweden","variable":"Transações","pct":0.2,"y":0.2,"name":"Sweden"},{"country":"Norway","variable":"Transações","pct":0.2,"y":0.2,"name":"Norway"},{"country":"Portugal","variable":"Transações","pct":0.3,"y":0.3,"name":"Portugal"},{"country":"Channel Islands","variable":"Transações","pct":0.1,"y":0.1,"name":"Channel Islands"},{"country":"Finland","variable":"Transações","pct":0.2,"y":0.2,"name":"Finland"},{"country":"Denmark","variable":"Transações","pct":0.1,"y":0.1,"name":"Denmark"},{"country":"Italy","variable":"Transações","pct":0.2,"y":0.2,"name":"Italy"},{"country":"Cyprus","variable":"Transações","pct":0.1,"y":0.1,"name":"Cyprus"},{"country":"Singapore","variable":"Transações","pct":0,"y":0,"name":"Singapore"},{"country":"Austria","variable":"Transações","pct":0.1,"y":0.1,"name":"Austria"},{"country":"Israel","variable":"Transações","pct":0,"y":0,"name":"Israel"},{"country":"Poland","variable":"Transações","pct":0.1,"y":0.1,"name":"Poland"},{"country":"Greece","variable":"Transações","pct":0,"y":0,"name":"Greece"},{"country":"Iceland","variable":"Transações","pct":0,"y":0,"name":"Iceland"},{"country":"USA","variable":"Transações","pct":0,"y":0,"name":"USA"},{"country":"Canada","variable":"Transações","pct":0,"y":0,"name":"Canada"},{"country":"Unspecified","variable":"Transações","pct":0,"y":0,"name":"Unspecified"},{"country":"Malta","variable":"Transações","pct":0,"y":0,"name":"Malta"},{"country":"United Arab Emirates","variable":"Transações","pct":0,"y":0,"name":"United Arab Emirates"},{"country":"Lebanon","variable":"Transações","pct":0,"y":0,"name":"Lebanon"},{"country":"Lithuania","variable":"Transações","pct":0,"y":0,"name":"Lithuania"},{"country":"European Community","variable":"Transações","pct":0,"y":0,"name":"European Community"},{"country":"Brazil","variable":"Transações","pct":0,"y":0,"name":"Brazil"},{"country":"RSA","variable":"Transações","pct":0,"y":0,"name":"RSA"},{"country":"Czech Republic","variable":"Transações","pct":0,"y":0,"name":"Czech Republic"},{"country":"Bahrain","variable":"Transações","pct":0,"y":0,"name":"Bahrain"},{"country":"Saudi Arabia","variable":"Transações","pct":0,"y":0,"name":"Saudi Arabia"}],"type":"column"}],"xAxis":{"type":"category","title":{"text":"País"}}},"theme":{"chart":{"backgroundColor":"transparent"},"colors":["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9","#f15c80","#e4d354","#2b908f","#f45b5b","#91e8e1"]},"conf_opts":{"global":{"Date":null,"VMLRadialGradientURL":"http =//code.highcharts.com/list(version)/gfx/vml-radial-gradient.png","canvasToolsURL":"http =//code.highcharts.com/list(version)/modules/canvas-tools.js","getTimezoneOffset":null,"timezoneOffset":0,"useUTC":true},"lang":{"contextButtonTitle":"Chart context menu","decimalPoint":".","downloadJPEG":"Download JPEG image","downloadPDF":"Download PDF document","downloadPNG":"Download PNG image","downloadSVG":"Download SVG vector image","drillUpText":"Back to {series.name}","invalidDate":null,"loading":"Loading...","months":["January","February","March","April","May","June","July","August","September","October","November","December"],"noData":"No data to display","numericSymbols":["k","M","G","T","P","E"],"printChart":"Print chart","resetZoom":"Reset zoom","resetZoomTitle":"Reset zoom level 1:1","shortMonths":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"thousandsSep":" ","weekdays":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]}},"type":"chart","fonts":[],"debug":false},"evals":[],"jsHooks":[]}</script>
 </div>
-<div id="section-gráfico-3" class="section level3">
-<h3>Gráfico 3</h3>
+<div id="section-vendas-por-produto" class="section level3">
+<h3>Vendas por produto</h3>
+<div class="knitr-options" data-fig-width="576" data-fig-height="460">
+
+</div>
+<div id="out2d4b49b1071c11b2" class="shiny-html-output"></div>
+</div>
+<div id="section-distribuição-por-transação" class="section level3">
+<h3>Distribuição por transação</h3>
+<div class="knitr-options" data-fig-width="576" data-fig-height="460">
+
+</div>
+<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" width="576" data-figure-id=fig1 /></p>
+</div>
+<div id="section-preços" class="section level3">
+<h3>Preços</h3>
+<div class="knitr-options" data-fig-width="576" data-fig-height="460">
+
+</div>
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
@@ -2724,7 +2704,7 @@ window.FlexDashboardComponents.push({
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" width="576" data-figure-id=fig1 /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-11-1.png" width="576" data-figure-id=fig2 /></p>
 </div>
 </div>
 </div>
@@ -2740,58 +2720,27 @@ window.FlexDashboardComponents.push({
 <div>
 <select id="var_id"><option value="Quantidade">Quantidade</option>
 <option value="Investimento Total">Investimento Total</option>
+<option value="Receita Total" selected>Receita Total</option>
 <option value="Preço Unitário">Preço Unitário</option>
 <option value="NPS">NPS</option>
-<option value="Receita Total" selected>Receita Total</option></select>
+<option value="Ticket">Ticket</option></select>
 <script type="application/json" data-for="var_id" data-nonempty="">{}</script>
 </div>
 </div><div class="form-group shiny-input-container">
 <label class="control-label" for="prod_id">Produto</label>
 <div>
-<select id="prod_id" multiple="multiple"><option value="SET OF TEA COFFEE SUGAR TINS PANTRY" selected>SET OF TEA COFFEE SUGAR TINS PANTRY</option>
-<option value="GREEN VINTAGE SPOT BEAKER">GREEN VINTAGE SPOT BEAKER</option>
-<option value="PINK VINTAGE SPOT BEAKER">PINK VINTAGE SPOT BEAKER</option>
-<option value="BLUE VINTAGE SPOT BEAKER">BLUE VINTAGE SPOT BEAKER</option>
-<option value="PANTRY WASHING UP BRUSH">PANTRY WASHING UP BRUSH</option>
-<option value="SET OF 6 SPICE TINS PANTRY DESIGN">SET OF 6 SPICE TINS PANTRY DESIGN</option>
+<select id="prod_id" multiple="multiple"><option value="SET OF 4 PANTRY JELLY MOULDS" selected>SET OF 4 PANTRY JELLY MOULDS</option>
+<option value="JAM MAKING SET WITH JARS">JAM MAKING SET WITH JARS</option>
+<option value="ALARM CLOCK BAKELIKE IVORY">ALARM CLOCK BAKELIKE IVORY</option>
+<option value="RECIPE BOX PANTRY YELLOW DESIGN">RECIPE BOX PANTRY YELLOW DESIGN</option>
 <option value="HOMEMADE JAM SCENTED CANDLES">HOMEMADE JAM SCENTED CANDLES</option>
 <option value="SET OF 3 CAKE TINS PANTRY DESIGN">SET OF 3 CAKE TINS PANTRY DESIGN</option>
-<option value="SET 2 PANTRY DESIGN TEA TOWELS">SET 2 PANTRY DESIGN TEA TOWELS</option>
-<option value="JAM MAKING SET WITH JARS">JAM MAKING SET WITH JARS</option>
-<option value="RECIPE BOX PANTRY YELLOW DESIGN">RECIPE BOX PANTRY YELLOW DESIGN</option>
-<option value="ALARM CLOCK BAKELIKE IVORY">ALARM CLOCK BAKELIKE IVORY</option>
-<option value="SET OF 4 PANTRY JELLY MOULDS">SET OF 4 PANTRY JELLY MOULDS</option>
-<option value="JAM JAR WITH PINK LID">JAM JAR WITH PINK LID</option>
-<option value="TRAVEL SEWING KIT">TRAVEL SEWING KIT</option>
-<option value="JAM JAR WITH GREEN LID">JAM JAR WITH GREEN LID</option>
-<option value="PINK REGENCY TEACUP AND SAUCER">PINK REGENCY TEACUP AND SAUCER</option>
-<option value="ROSES REGENCY TEACUP AND SAUCER">ROSES REGENCY TEACUP AND SAUCER</option>
-<option value="GREEN REGENCY TEACUP AND SAUCER">GREEN REGENCY TEACUP AND SAUCER</option>
-<option value="RETROSPOT TEA SET CERAMIC 11 PC">RETROSPOT TEA SET CERAMIC 11 PC</option>
-<option value="WRAP POPPIES  DESIGN">WRAP POPPIES  DESIGN</option>
-<option value="PACK OF 12 PINK PAISLEY TISSUES">PACK OF 12 PINK PAISLEY TISSUES</option>
-<option value="SET OF 72 RETROSPOT PAPER  DOILIES">SET OF 72 RETROSPOT PAPER  DOILIES</option>
-<option value="SET/6 RED SPOTTY PAPER PLATES">SET/6 RED SPOTTY PAPER PLATES</option>
-<option value="RETROSPOT PARTY BAG + STICKER SET">RETROSPOT PARTY BAG + STICKER SET</option>
-<option value="REGENCY TEA PLATE PINK">REGENCY TEA PLATE PINK</option>
-<option value="WRAP I LOVE LONDON">WRAP I LOVE LONDON</option>
-<option value="WOODLAND CHARLOTTE BAG">WOODLAND CHARLOTTE BAG</option>
-<option value="JUMBO BAG ALPHABET">JUMBO BAG ALPHABET</option>
-<option value="JUMBO BAG DOILEY PATTERNS">JUMBO BAG DOILEY PATTERNS</option>
-<option value="POPCORN HOLDER">POPCORN HOLDER</option>
-<option value="RED TOADSTOOL LED NIGHT LIGHT">RED TOADSTOOL LED NIGHT LIGHT</option>
-<option value="PINK CREAM FELT CRAFT TRINKET BOX">PINK CREAM FELT CRAFT TRINKET BOX</option>
-<option value="WHITE SKULL HOT WATER BOTTLE">WHITE SKULL HOT WATER BOTTLE</option>
-<option value="LUNCH BAG ALPHABET DESIGN">LUNCH BAG ALPHABET DESIGN</option>
-<option value="12 PENCILS SMALL TUBE SKULL">12 PENCILS SMALL TUBE SKULL</option>
-<option value="WOODEN SCHOOL COLOURING SET">WOODEN SCHOOL COLOURING SET</option>
-<option value="FAWN BLUE HOT WATER BOTTLE">FAWN BLUE HOT WATER BOTTLE</option>
-<option value="GIRAFFE WOODEN RULER">GIRAFFE WOODEN RULER</option>
-<option value="REVOLVER WOODEN RULER">REVOLVER WOODEN RULER</option>
-<option value="JINGLE BELL HEART ANTIQUE SILVER">JINGLE BELL HEART ANTIQUE SILVER</option>
-<option value="ALPHABET STENCIL CRAFT">ALPHABET STENCIL CRAFT</option>
-<option value="SET/3 RED GINGHAM ROSE STORAGE BOX">SET/3 RED GINGHAM ROSE STORAGE BOX</option>
-<option value="ASSORTED COLOUR BIRD ORNAMENT">ASSORTED COLOUR BIRD ORNAMENT</option></select>
+<option value="PANTRY WASHING UP BRUSH">PANTRY WASHING UP BRUSH</option>
+<option value="SET OF TEA COFFEE SUGAR TINS PANTRY">SET OF TEA COFFEE SUGAR TINS PANTRY</option>
+<option value="SET OF 6 SPICE TINS PANTRY DESIGN">SET OF 6 SPICE TINS PANTRY DESIGN</option>
+<option value="BLUE VINTAGE SPOT BEAKER">BLUE VINTAGE SPOT BEAKER</option>
+<option value="PINK VINTAGE SPOT BEAKER">PINK VINTAGE SPOT BEAKER</option>
+<option value="GREEN VINTAGE SPOT BEAKER">GREEN VINTAGE SPOT BEAKER</option></select>
 <script type="application/json" data-for="prod_id">{}</script>
 </div>
 </div><button id="update_button" type="button" class="btn btn-default action-button">Atualizar</button></p>
@@ -2803,24 +2752,7 @@ window.FlexDashboardComponents.push({
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
-<div class="sourceCode" id="section-cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="section-cb1-1"><a href="#section-cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plotOutput</span>(<span class="st">&quot;sales_line&quot;</span>)</span></code></pre></div>
 <div id="sales_line" class="shiny-plot-output" style="width: 100% ; height: 400px"></div>
-<div class="knitr-options" data-fig-width="576" data-fig-height="460">
-
-</div>
-</div>
-<div id="section-mapa" class="section level3">
-<h3>Mapa</h3>
-<div class="knitr-options" data-fig-width="576" data-fig-height="460">
-
-</div>
-<div id="sales_map" style="width:100%; height:400px; " class="highchart html-widget html-widget-output"></div>
-<div class="knitr-options" data-fig-width="576" data-fig-height="460">
-
-</div>
-</div>
-<div id="section-gráfico-3-1" class="section level3">
-<h3>Gráfico 3</h3>
 <div class="knitr-options" data-fig-width="576" data-fig-height="460">
 
 </div>
@@ -2894,79 +2826,24 @@ library(conflicted)
 conflict_prefer("filter", "dplyr")
 conflict_prefer("mutate", "dplyr")
 conflict_prefer("arrange", "dplyr")
+conflict_prefer("pivot_longer", "dplyr")
+conflict_prefer("starts_with", "dplyr")
+conflict_prefer("select", "dplyr")
 
 
 today <- Sys.Date()
 
 theme_set(theme_minimal())
 theme_update(text = element_text(family = "Open Sans"),
-             plot.title = element_text(face = "bold", size = 23,
+             plot.title = element_text(face = "bold", size = 18,
                                        color = "#1d3752"),
              legend.position = "bottom")
 
 options(digits=4)
 
-</script>
- 
-<script type="application/shiny-prerendered" data-context="server">
-
-prod_summary <- reactive({
-  
-  clicks <- input$update_button
-  
-isolate({  
-
-prod_summary <- rt_filter %>% 
-  filter(description %in% input$prod_id) %>% 
-  #filter(description %in% c("12 PENCILS SMALL TUBE SKULL")) %>% 
-  group_by(month_year, description) %>% 
-  summarise(across(c("quantity", "total_investment", "total_revenue"), ~sum(.x, na.rm = T)),
-            across(c("unit_price", "nps"), ~mean(.x, na.rm = T)))
-
-
-#prod_summary %>% glimpse
-  
-})})
-
-
-selected_col <- reactive({
-  
-    clicks <- input$update_button
-  
-  isolate({
-  
-    cols %>% 
-      #filter(name == "Quantidade") %>% 
-      filter(name == input$var_id) %>% 
-      pull(col)
-  
-})})
-
-
-output$sales_line <- renderPlot({
-  
-  clicks <- input$update_button
-  
-isolate({  
-  
-  prod_summary() %>% 
-  #prod_summary %>% 
-    ggplot(aes(month_year, selected_col(), color = description)) +
-    geom_line() +
-    labs(y = input$var_id, x = "")
-    
- # prod_summary() %>%  
- #   hchart(., "line", 
- #          hcaes(x = month_year, 
- #                y = selected,
- #                group = description,
- #                y = quantity
- #                )) %>% 
- #   hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
-  
-  })})
-
-
+hc_cols <- c("#7cb5ec", "#434348", "#90ed7d", "#f7a35c", 
+             "#8085e9", "#f15c80", "#e4d354", "#2b908f", 
+             "#f45b5b", "#91e8e1")
 
 </script>
  
@@ -2978,13 +2855,12 @@ selected_col <- reactive({
   
   isolate({
   
-    cols %>% 
+    cols_map %>% 
       #filter(name == "Quantidade") %>% 
       filter(name == input$var_id) %>% 
       pull(col)
   
 })})
-
 
 output$sales_map <- renderHighchart({
   
@@ -3009,9 +2885,110 @@ isolate({
   })})
 
 </script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+
+selected_col <- reactive({
+  
+    clicks <- input$update_button
+  
+  isolate({
+  
+    cols_map %>% 
+      #filter(name == "Quantidade") %>% 
+      filter(name == input$var_id) %>% 
+      pull(col)
+  
+})})
+
+output$sales_map <- renderHighchart({
+  
+  clicks <- input$update_button
+  
+isolate({ 
+  
+retail %>% 
+ggplot(aes(x = unit_price)) + 
+  geom_histogram(binwidth = 1) + coord_cartesian(xlim = c(0, 20))+
+  geom_vline(aes(xintercept=median(unit_price)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(unit_price)),
+            color="red", linetype="dashed", size=1)+
+  theme_economist()+
+  labs(title = "Preço por Produto",x = "Preco", y = "Produto")
+
+})})
+ 
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+
+prod_summary <- reactive({
+  
+  clicks <- input$update_button
+  
+isolate({  
+
+#prod_summary <- 
+  rt_filter %>% 
+  filter(description %in% input$prod_id) %>% 
+  #filter(description %in% c("12 PENCILS SMALL TUBE SKULL")) %>% 
+  group_by(month_year, description) %>% 
+  summarise(across(c("quantity", "total_investment", "total_revenue"), ~sum(.x, na.rm = T)),
+            across(c("unit_price", "nps"), ~mean(.x, na.rm = T)))
+
+
+#prod_summary %>% glimpse
+  
+})})
+
+
+selected_col <- reactive({
+  
+    clicks <- input$update_button
+  
+  isolate({
+  
+    cols_map %>% 
+      #filter(name == "Quantidade") %>% 
+      filter(name == input$var_id) %>% 
+      pull(col)
+  
+})})
+
+
+output$sales_line <- renderPlot({
+  
+  clicks <- input$update_button
+  
+isolate({  
+  
+  #prod_summary() %>% 
+  prod_summary %>% 
+    ggplot(aes(x = month_year, 
+               #y = selected_col(), 
+               y = quantity, 
+               color = description)) +
+    geom_line() +
+    labs(y = input$var_id, x = "")
+    
+ # prod_summary() %>%  
+ #   hchart(., "line", 
+ #          hcaes(x = month_year, 
+ #                y = selected,
+ #                group = description,
+ #                y = quantity
+ #                )) %>% 
+ #   hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
+  
+  })})
+
+
+
+</script>
  <!--html_preserve-->
 <script type="application/shiny-prerendered" data-context="dependencies">
-{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["header-attrs"]},{"type":"character","attributes":{},"value":["2.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/pandoc"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["header-attrs.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/lumen.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["stickytableheaders"]},{"type":"character","attributes":{},"value":["0.1.19"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/stickytableheaders"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.stickytableheaders.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["flexdashboard"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.11.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["href"]}},"value":[{"type":"character","attributes":{},"value":["shared/selectize"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"character","attributes":{},"value":["<!--[if lt IE 9]>\n<script src=\"shared/selectize/js/es5-shim.min.js\"><\/script>\n<![endif]-->\n<script src=\"shared/selectize/js/selectize.min.js\"><\/script>"]},{"type":"NULL"},{"type":"NULL"},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.11.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["href"]}},"value":[{"type":"character","attributes":{},"value":["shared/selectize"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"character","attributes":{},"value":["<!--[if lt IE 9]>\n<script src=\"shared/selectize/js/es5-shim.min.js\"><\/script>\n<![endif]-->\n<script src=\"shared/selectize/js/selectize.min.js\"><\/script>"]},{"type":"NULL"},{"type":"NULL"},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.5.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.5.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["3.5.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["proj4js"]},{"type":"character","attributes":{},"value":["2.3.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/proj4js"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["proj4.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highcharts"]},{"type":"character","attributes":{},"value":["8.1.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/highcharts"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharts.js","highcharts-3d.js","highcharts-more.js","modules/stock.js","modules/map.js","modules/annotations.js","modules/data.js","modules/drilldown.js","modules/item-series.js","modules/offline-exporting.js","modules/overlapping-datalabels.js","modules/exporting.js","modules/export-data.js","modules/funnel.js","modules/heatmap.js","modules/treemap.js","modules/sankey.js","modules/dependency-wheel.js","modules/organization.js","modules/solid-gauge.js","modules/streamgraph.js","modules/sunburst.js","modules/vector.js","modules/wordcloud.js","modules/xrange.js","modules/tilemap.js","modules/venn.js","modules/gantt.js","modules/timeline.js","modules/parallel-coordinates.js","modules/bullet.js","modules/coloraxis.js","modules/dumbbell.js","modules/lollipop.js","modules/series-label.js","plugins/motion.js","custom/reset.js","modules/boost.js"]},{"type":"character","attributes":{},"value":["css/motion.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highchart-binding"]},{"type":"character","attributes":{},"value":["0.8.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highchart.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["0.8.2"]}]}]}
+{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["header-attrs"]},{"type":"character","attributes":{},"value":["2.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/pandoc"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["header-attrs.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["bootstrap"]},{"type":"character","attributes":{},"value":["3.3.5"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/bootstrap"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["viewport"]}},"value":[{"type":"character","attributes":{},"value":["width=device-width, initial-scale=1"]}]},{"type":"character","attributes":{},"value":["js/bootstrap.min.js","shim/html5shiv.min.js","shim/respond.min.js"]},{"type":"character","attributes":{},"value":["css/lumen.min.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["1.11.3"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["rmd/h/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["rmarkdown"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["2.5"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["stickytableheaders"]},{"type":"character","attributes":{},"value":["0.1.19"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www/stickytableheaders"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.stickytableheaders.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["flexdashboard"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.5.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.11.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["href"]}},"value":[{"type":"character","attributes":{},"value":["shared/selectize"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"character","attributes":{},"value":["<!--[if lt IE 9]>\n<script src=\"shared/selectize/js/es5-shim.min.js\"><\/script>\n<![endif]-->\n<script src=\"shared/selectize/js/selectize.min.js\"><\/script>"]},{"type":"NULL"},{"type":"NULL"},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.11.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["href"]}},"value":[{"type":"character","attributes":{},"value":["shared/selectize"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"character","attributes":{},"value":["<!--[if lt IE 9]>\n<script src=\"shared/selectize/js/es5-shim.min.js\"><\/script>\n<![endif]-->\n<script src=\"shared/selectize/js/selectize.min.js\"><\/script>"]},{"type":"NULL"},{"type":"NULL"},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.5.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.5.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["3.5.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["proj4js"]},{"type":"character","attributes":{},"value":["2.3.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/proj4js"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["proj4.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highcharts"]},{"type":"character","attributes":{},"value":["8.1.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/highcharts"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharts.js","highcharts-3d.js","highcharts-more.js","modules/stock.js","modules/map.js","modules/annotations.js","modules/data.js","modules/drilldown.js","modules/item-series.js","modules/offline-exporting.js","modules/overlapping-datalabels.js","modules/exporting.js","modules/export-data.js","modules/funnel.js","modules/heatmap.js","modules/treemap.js","modules/sankey.js","modules/dependency-wheel.js","modules/organization.js","modules/solid-gauge.js","modules/streamgraph.js","modules/sunburst.js","modules/vector.js","modules/wordcloud.js","modules/xrange.js","modules/tilemap.js","modules/venn.js","modules/gantt.js","modules/timeline.js","modules/parallel-coordinates.js","modules/bullet.js","modules/coloraxis.js","modules/dumbbell.js","modules/lollipop.js","modules/series-label.js","plugins/motion.js","custom/reset.js","modules/boost.js"]},{"type":"character","attributes":{},"value":["css/motion.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highchart-binding"]},{"type":"character","attributes":{},"value":["0.8.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highchart.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"character","attributes":{},"value":["1.5.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["www"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["htmlwidgets"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["1.5.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["jquery"]},{"type":"character","attributes":{},"value":["3.5.0"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/jquery"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["jquery.min.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["proj4js"]},{"type":"character","attributes":{},"value":["2.3.15"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/proj4js"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["proj4.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highcharts"]},{"type":"character","attributes":{},"value":["8.1.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets/lib/highcharts"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharts.js","highcharts-3d.js","highcharts-more.js","modules/stock.js","modules/map.js","modules/annotations.js","modules/data.js","modules/drilldown.js","modules/item-series.js","modules/offline-exporting.js","modules/overlapping-datalabels.js","modules/exporting.js","modules/export-data.js","modules/funnel.js","modules/heatmap.js","modules/treemap.js","modules/sankey.js","modules/dependency-wheel.js","modules/organization.js","modules/solid-gauge.js","modules/streamgraph.js","modules/sunburst.js","modules/vector.js","modules/wordcloud.js","modules/xrange.js","modules/tilemap.js","modules/venn.js","modules/gantt.js","modules/timeline.js","modules/parallel-coordinates.js","modules/bullet.js","modules/coloraxis.js","modules/dumbbell.js","modules/lollipop.js","modules/series-label.js","plugins/motion.js","custom/reset.js","modules/boost.js"]},{"type":"character","attributes":{},"value":["css/motion.css"]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[true]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files","pkgVersion"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["highchart-binding"]},{"type":"character","attributes":{},"value":["0.8.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["file"]}},"value":[{"type":"character","attributes":{},"value":["htmlwidgets"]}]},{"type":"NULL"},{"type":"character","attributes":{},"value":["highchart.js"]},{"type":"NULL"},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["highcharter"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["0.8.2"]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.11.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["href"]}},"value":[{"type":"character","attributes":{},"value":["shared/selectize"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"character","attributes":{},"value":["<!--[if lt IE 9]>\n<script src=\"shared/selectize/js/es5-shim.min.js\"><\/script>\n<![endif]-->\n<script src=\"shared/selectize/js/selectize.min.js\"><\/script>"]},{"type":"NULL"},{"type":"NULL"},{"type":"logical","attributes":{},"value":[true]}]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","version","src","meta","script","stylesheet","head","attachment","package","all_files"]},"class":{"type":"character","attributes":{},"value":["html_dependency"]}},"value":[{"type":"character","attributes":{},"value":["selectize"]},{"type":"character","attributes":{},"value":["0.11.2"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["href"]}},"value":[{"type":"character","attributes":{},"value":["shared/selectize"]}]},{"type":"NULL"},{"type":"NULL"},{"type":"character","attributes":{},"value":["css/selectize.bootstrap3.css"]},{"type":"character","attributes":{},"value":["<!--[if lt IE 9]>\n<script src=\"shared/selectize/js/es5-shim.min.js\"><\/script>\n<![endif]-->\n<script src=\"shared/selectize/js/selectize.min.js\"><\/script>"]},{"type":"NULL"},{"type":"NULL"},{"type":"logical","attributes":{},"value":[true]}]}]}
 </script>
 <!--/html_preserve-->
 <!--html_preserve-->
