@@ -121,6 +121,9 @@ retail %>%
 
 retail <- retail %>% dplyr::filter(Country == "United Kingdom")
 
+retail %>% dplyr::group_by(NPS) %>% tally
+
+
 ```
 
 Vemos que o Reino Unido concentra 82.9% do faturamento e 90% das transações.<br>
@@ -272,7 +275,7 @@ median(clientes$Tkt)
 Para nossa análise decidimos tirar os casos mais atípicos, traçando um corte em de clientes até 100 pedidos.
  
 ```{r}
-foras2 <- clientes %>% filter(Tkt > 100) %>% select(CustomerID)
+foras2 <- clientes %>% dplyr::filter(Tkt > 100) %>% select(CustomerID) 
 retail<- retail %>% dplyr::filter(!CustomerID %in% foras2$CustomerID )
 ```
 
@@ -316,7 +319,7 @@ df <- as.data.frame( pca_model$rotation[,1:5])
 
 tb <- as_tibble( pca_model$rotation[,1:5])
  
-df1 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC1^2 > mean(PC1^2)) %>% select(c(PC1,nome))
+df1 <- df %>%    dplyr::mutate(nome = rownames(df)) %>%   dplyr:: filter(PC1^2 > mean(PC1^2)) %>%    dplyr::select(c(PC1,nome))
 #COMIDA E LANCHES
                                               
 df2 <- df %>% mutate(nome = rownames(df)) %>% mutate(across(everything(), abs)) %>%  filter(PC2^2 > mean(PC2^2)) %>% select(c(PC2,nome))
@@ -369,7 +372,7 @@ rules
 inspect(head(rules, n = 10, by = c("confidence", "lift")))
 
 df5$nome[20] = "JUMBO BAG 50S CHRISTMAS"
-rules.sub <- subset(rules, subset = rhs %in% df5$nome & lift > 2 )
+rules.sub <- subset(rules, subset = rhs %in% df1$nome & lift > 2 )
 rules.sub
 inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
 
