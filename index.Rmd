@@ -154,10 +154,7 @@ rt_uk <- rt_uk_prep %>%
          product = str_replace_all(product, "\\s+", " "))
  
 
-# Falta colocar para tirar espaço do inicio ou do final
-  
-head(retail_2$Description_2,5)
-tail(retail_2$Description_2,5)
+
 
 # PCA -------------
 
@@ -172,8 +169,8 @@ pca_prep <- rt_uk %>%
    select(-total_quantity_description) %>% 
    pivot_wider(names_from = product,
               values_from = total_quantity,
-              #values_fill = list(total_quantity = 0)
-              values_fill = 0
+              values_fill = list(total_quantity = 0)
+              #values_fill = 0
               ) %>% #janitor::clean_names() %>% glimpse()
   #RC: alterei "values_fill = 0" por "values_fill = list(values = 0)"
      select(1:501)
@@ -219,14 +216,14 @@ cols_prod <- tibble(col = c("avg_price","tkts" ,"clients",
 # Basket Analysis -----------------------------------------------------------------------------------
 
 #processamento da base
- itemList <- ddply(rt_uk,c("customer_id","date"), 
-                   function(df1)paste(df1$product, 
-                                      collapse = ","))
- 
- itemList$customer_id <- NULL
- itemList$date <- NULL
- colnames(itemList) <- c("items")
- 
+itemList <- ddply(rt_uk,c("customer_id","date"), 
+                  function(df1)paste(df1$product, 
+                                     collapse = ","))
+
+itemList$customer_id <- NULL
+itemList$date <- NULL
+colnames(itemList) <- c("items")
+
 write.csv(itemList,"output/market_basket.csv", quote = FALSE, row.names = TRUE)
 tr <- read.transactions('output/market_basket.csv', format = 'basket', sep=',')
 
@@ -237,6 +234,9 @@ rules <- apriori(tr, parameter = list(sup = 0.004, conf = 0.8))
 
 #Filtrar as regras da missao de compra
 rules.sub <- subset(rules, subset = rhs %in% products & lift > 2 )
+
+Direita <- rules.sub@rhs@itemInfo 
+Esquerda <- rules.sub@lhs@itemInfo
 
 Regency <-  rules.sub@rhs@itemInfo %>% filter(grepl("REGENCY",labels))
 rules_regency <- subset(rules.sub , subset = rhs %in% Regency$labels )
@@ -765,11 +765,6 @@ plot(rules_regency  ,
      #control = list(nodeCol='darkblue'))
 
 
-#Grafico ARULES
-plot(rules.sub[100:131],
-     engine = 'visNetwork',
-     method = 'graph')
-     #control = list(nodeCol='darkblue'))
 
 ```
 
