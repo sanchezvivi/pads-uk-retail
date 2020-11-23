@@ -383,7 +383,7 @@ rt_days %>%
   ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
   geom_tile() +
   scale_fill_viridis_c(labels = scales::label_number_si()) + 
-  labs(x = "", y = "Hora", title = "Feriados")
+  labs(x = "", y = "Hora", title = "Dias normais")
   
 
 rt_days %>% 

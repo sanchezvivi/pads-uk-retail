@@ -26,7 +26,7 @@ library(janitor)
 library(arules)
 library(arulesViz)
 
-library(devtools)
+#library(devtools)
 library(factoextra)
 
 library(flexdashboard)
@@ -34,23 +34,23 @@ library(shiny)
 library(highcharter)
 library(viridisLite)
 
-library(tidyverse)
+
 library(tidytext)
 library(tidymodels)
 library(tidyverse)
 
-library(conflicted) 
+#library(conflicted) 
 
-conflict_prefer("filter", "dplyr")
-conflict_prefer("mutate", "dplyr")
-conflict_prefer("arrange", "dplyr")
-conflict_prefer("pivot_longer", "dplyr")
-conflict_prefer("starts_with", "dplyr")
-conflict_prefer("select", "dplyr")
-conflict_prefer("summarise", "dplyr")
-conflict_prefer("rename", "dplyr")
-conflict_prefer("across", "dplyr")
-conflict_prefer("group_by", "dplyr")
+#conflict_prefer("filter", "dplyr")
+#conflict_prefer("mutate", "dplyr")
+#conflict_prefer("arrange", "dplyr")
+#conflict_prefer("pivot_longer", "dplyr")
+#conflict_prefer("starts_with", "dplyr")
+#conflict_prefer("select", "dplyr")
+#conflict_prefer("summarise", "dplyr")
+#conflict_prefer("rename", "dplyr")
+#conflict_prefer("across", "dplyr")
+#conflict_prefer("group_by", "dplyr")
 
 
 today <- Sys.Date()
@@ -155,8 +155,8 @@ rt_uk <- rt_uk_prep %>%
 
 # Falta colocar para tirar espaço do inicio ou do final
   
-head(retail_2$Description_2,5)
-tail(retail_2$Description_2,5)
+#head(retail_2$Description_2,5)
+#tail(retail_2$Description_2,5)
 
 # PCA -------------
 
@@ -183,17 +183,67 @@ rec_pca <- recipe( ~ ., data = pca_prep) %>%
   step_pca(all_predictors(), id = "pca") %>% 
   prep()
 
+?step_pca
+
 tidy_pca <- rec_pca %>% 
   tidy(id = "pca")
 
+skim(tidy_pca)
+
+# PCA para os top 500 produtos, selecionando apenas a componente com a maior contribuição
+
 top_pca <- tidy_pca %>%
-  filter(component %in% paste0("PC", 1:6)) %>%
+  select(-id) %>% 
+  filter(component %in% paste0("PC", 1:10)) %>%
   group_by(component) %>%
   filter(value^2 > mean(value^2)) %>%
   ungroup()
+  #group_by(terms) %>% 
+  #top_n(1, abs(value)) %>% 
+  #ungroup() %>% 
+  #arrange(terms)
 
-skim(top_pca)
+rt_pca <- rt_uk %>% 
+  left_join(top_pca, by = c("product" ="terms")) %>% 
+  filter(!is.na(component))
 
+products_pca <- rt_pca %>% 
+  group_by(component, product) %>% 
+  summarise(across(c("quantity", "total_investment", "total_revenue"),
+                   ~sum(.x, na.rm = T)),
+                  across(c("unit_price", "nps"), ~mean(.x, na.rm = T)),
+                  tkts = n_distinct(invoice_no)) %>% 
+  top_n(20, total_revenue) %>% 
+  arrange(desc(total_revenue)) %>% 
+  ungroup()
+  
+
+pca_summary <- rt_pca %>% 
+  group_by(component) %>% 
+  summarise(across(c("quantity", "total_investment", "total_revenue"),
+                   ~sum(.x, na.rm = T)),
+                  across(c("unit_price", "nps"), ~mean(.x, na.rm = T)),
+                  tkts = n_distinct(invoice_no),
+                  products = n_distinct(product)) %>% 
+  mutate(perc_net = round(total_revenue*100/sum(total_revenue),1),
+         perc_tkts = round(tkts*100/sum(tkts),1)) %>% 
+  filter(products > 1) %>% 
+  arrange(desc(total_revenue)) %>% 
+  top_n(20, total_revenue)
+  #filter(total_revenue > mean(total_revenue)) %>% 
+  #ungroup()
+
+pca_drilldown <- products_pca %>%
+  filter(component %in% pca_summary$component) %>% 
+  group_nest(component) %>% 
+  mutate(id = component,
+    type = "column",
+    # in the drilldown we'll give the mapping via creating the columns
+    data = map(data, mutate, name = product, y = total_revenue),
+    data = map(data, list_parse))
+
+#skim(rt_pca)
+  
 products <- top_pca %>% 
   filter(component %in% paste0("PC", 5)) %>% 
   arrange(desc(value)) %>% 
@@ -491,22 +541,58 @@ ggplot(aes(x = unit_price)) +
 
 ### PCA 
 
-```{r echo=FALSE}
+```{r}
 
-top_pca %>% 
-  group_by(component) %>% 
-  mutate(terms = reorder_within(terms, abs(value), component)) %>% 
-  top_n(10, abs(value)) %>%
-  ggplot(aes(abs(value), terms, fill = if_else(value > 0, 'Positiva','Negativa'))) +
-  geom_col(size = 0.5) +
-  facet_wrap(~component, scales = "free_y", nrow = 3) +
-  scale_y_reordered() +
-  scale_fill_manual(values = c('#4E84C4', '#2d2017')) +
-  labs(x = "Valor absoluto da contribuição",
-       y = NULL, fill = "Contribuição") +
-  theme(text = element_text(size = 8))
+highchartOutput("pca_drilldown")
 
 ```
+
+
+```{r}
+
+
+output$pca_drilldown <- renderHighchart({
+  
+  
+x <- c("Receita Total (MM)", "Itens", "Pedidos (%)")
+y <- c("{point.total_revenue}", "{point.quantity}", "{point.perc_tkts}%")
+
+tt <- tooltip_table(x, y)
+
+hchart(
+  pca_summary,
+  "column",
+  hcaes(x = component, y = total_revenue, 
+        name = component, drilldown = component),
+  name = "Componentes",
+  #colorByPoint = TRUE
+) %>% 
+  hc_drilldown(
+    allowPointDrilldown = TRUE,
+    series = list_parse(pca_drilldown)
+  ) %>% 
+  hc_tooltip(
+    pointFormat = tt, # "{point.name} {point.pop}"
+    useHTML = TRUE,
+    valueDecimals = 0
+  ) %>% 
+  hc_yAxis(
+    title = list(text = "Receita total (log scale)"),
+    #type = "logarithmic",
+    minorTickInterval = 'auto'
+  ) %>% 
+  hc_xAxis(
+    title = ""
+  )
+  
+  
+})
+
+  
+
+
+```
+
 
 Missão
 =====================================  
