@@ -140,7 +140,9 @@ numbers <- str_c(c("1","2","3","4","5","6","7","8","9","0"), collapse="|")
 
 #stop_words <- str_c(get_stopwords()[1], collapse="|")
 size <- str_c(str_to_upper(c('small', 'large', 'jumbo', 'box', 'pack', 'cases', 'kit')), collapse="|")
+
 material <- str_c(str_to_upper(c('metal','wooden', 'wood', 'glass', 'silver', 'ceramic')), collapse="|")
+
 stopword <- str_c(str_to_upper(c('set','of', 'with', 'and', 'colour')), collapse="|")
 
 filters <- str_c(c(size, material, stopword, colours, numbers), collapse = "|")
@@ -150,8 +152,16 @@ rt_uk <- rt_uk_prep %>%
          product = str_replace_all(product, "\\W", " "),
          product = str_replace_all(product, "\\s+$", ""),
          product = str_replace_all(product, "^\\s+", ""),
-         product = str_replace_all(product, "\\s+", " "))
+         product = str_replace_all(product, "\\s+", " "),
+         colour = str_extract(description, colours),
+         made_from = str_extract(description, material),
+         package = str_extract(description, size))
+  
+  
+#rt_uk %>% fill("none") %>% skim()
  
+
+#skim(rt_uk)
 
 # Falta colocar para tirar espaço do inicio ou do final
   
@@ -212,7 +222,7 @@ products_pca <- rt_pca %>%
                    ~sum(.x, na.rm = T)),
                   across(c("unit_price", "nps"), ~mean(.x, na.rm = T)),
                   tkts = n_distinct(invoice_no)) %>% 
-  top_n(20, total_revenue) %>% 
+  #top_n(20, total_revenue) %>% 
   arrange(desc(total_revenue)) %>% 
   ungroup()
   
@@ -256,7 +266,7 @@ rt_mission <- rt_uk %>%
          total_revenue = quantity * unit_price)
 
 
-cols_prod <- tibble(col = c("avg_price","tkts" ,"clients",
+cols_prod <- tibble(col = c("unit_price","tkts" ,"clients",
                             "quantity", "total_investment", "total_revenue"),
                name = c("Preço Unitário","Pedidos","Clientes", "Quantidade",
                         "Investimento Total", "Receita Total")) %>% arrange(name)
@@ -267,21 +277,21 @@ cols_prod <- tibble(col = c("avg_price","tkts" ,"clients",
 
 #processamento da base
 #itemList <- ddply(rt_uk,c("customer_id","date"), 
-#                  function(df1)paste(df1$product, 
-#                                     collapse = ","))
+#                 function(df1)paste(df1$product, 
+#                                    collapse = ","))
 #
 #itemList$CustomerID <- NULL
 #itemList$Date <- NULL
 #colnames(itemList) <- c("items")
-#
+##
 #write.csv(itemList,"output/market_basket.csv", quote = FALSE, row.names = TRUE)
 
-#tr <- read.transactions('output/market_basket.csv', format = 'basket', sep=',')
-#
-##regras de associacao
+#tr <- read.transactions('market_basket.csv', format = 'basket', sep=',')
+
+#regras de associacao
 #rules <- apriori(tr, parameter = list(sup = 0.002, conf = 0.8))
-##inspect(head(rules, n = 10, by = c("confidence", "lift")))
-#
+#inspect(head(rules, n = 10, by = c("confidence", "lift")))
+
 ##Filtrar as regras da missao de compra
 ##PRECISA ATUALIZAR O df1$nome PELA LISTA DE PRODUTOS FOCO NOSSA
 #rules.sub <- subset(rules, subset = rhs %in% prod_pca & lift > 2 )
@@ -292,7 +302,7 @@ cols_prod <- tibble(col = c("avg_price","tkts" ,"clients",
 
 # Recomendação --------------
 
-
+#source("logit_backup.R")
 
 
 ```
@@ -542,6 +552,22 @@ ggplot(aes(x = unit_price)) +
 ```
 
 
+### Clientes
+
+```{r}
+
+
+
+
+```
+
+```{r warning=FALSE, context="server"}
+
+
+
+```
+
+
 ### PCA 
 
 ```{r}
@@ -556,8 +582,8 @@ highchartOutput2("drilldown")
 
 output$drilldown <- renderHighchart2({
   
-x <- c("Receita Total (MM)", "Itens", "Pedidos (%)")
-y <- c("{point.total_revenue}", "{point.quantity}", "{point.perc_tkts}%")
+x <- c("Receita Total (MM)", "Itens", "Preço Unitário")
+y <- c("{point.total_revenue}", "{point.quantity}", "{point.unit_price}%")
 
 tt <- tooltip_table(x, y)
 
@@ -579,7 +605,7 @@ hchart(
     valueDecimals = 0
   ) %>% 
   hc_yAxis(
-    title = list(text = "Receita total (log scale)"),
+    title = list(text = "Receita total"),
     #type = "logarithmic",
     minorTickInterval = 'auto'
   ) %>% 
