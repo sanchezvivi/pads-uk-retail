@@ -7,7 +7,7 @@ output:
     orientation: rows
     vertical_layout: fill
     theme: lumen
-runtime: shiny
+runtime: shiny_prerendered
 ---
 
 ```{r setup, include=FALSE, warning=FALSE}
@@ -26,7 +26,7 @@ library(janitor)
 library(arules)
 library(arulesViz)
 
-#library(devtools)
+library(devtools)
 library(factoextra)
 
 library(flexdashboard)
@@ -34,30 +34,31 @@ library(shiny)
 library(highcharter)
 library(viridisLite)
 
-
+library(tidyverse)
 library(tidytext)
 library(tidymodels)
 library(tidyverse)
 
 library(conflicted) 
+library(plyr) 
 
 conflict_prefer("filter", "dplyr")
-#conflict_prefer("mutate", "dplyr")
-#conflict_prefer("arrange", "dplyr")
-#conflict_prefer("pivot_longer", "dplyr")
-#conflict_prefer("starts_with", "dplyr")
-#conflict_prefer("select", "dplyr")
-#conflict_prefer("summarise", "dplyr")
-#conflict_prefer("rename", "dplyr")
-#conflict_prefer("across", "dplyr")
-#conflict_prefer("group_by", "dplyr")
+conflict_prefer("mutate", "dplyr")
+conflict_prefer("arrange", "dplyr")
+conflict_prefer("pivot_longer", "dplyr")
+conflict_prefer("starts_with", "dplyr")
+conflict_prefer("select", "dplyr")
+conflict_prefer("summarise", "dplyr")
+conflict_prefer("rename", "dplyr")
+conflict_prefer("across", "dplyr")
+conflict_prefer("group_by", "dplyr")
 
 
 today <- Sys.Date()
 
 theme_set(theme_minimal())
-theme_update(text = element_text(family = "Open Sans", size = 16),
-             plot.title = element_text(face = "bold", size = 18,
+theme_update(text = element_text(family = "Open Sans"),
+             plot.title = element_text(face = "bold", size = 20,
                                        color = "#1d3752"),
              legend.position = "bottom")
 
@@ -165,8 +166,8 @@ rt_uk <- rt_uk_prep %>%
 
 # Falta colocar para tirar espaço do inicio ou do final
   
-#head(retail_2$Description_2,5)
-#tail(retail_2$Description_2,5)
+head(retail_2$Description_2,5)
+tail(retail_2$Description_2,5)
 
 # PCA -------------
 
@@ -193,19 +194,14 @@ rec_pca <- recipe( ~ ., data = pca_prep) %>%
   step_pca(all_predictors(), id = "pca") %>% 
   prep()
 
-
 tidy_pca <- rec_pca %>% 
   tidy(id = "pca")
 
-#skim(tidy_pca)
-
-# PCA para os top 500 produtos, selecionando apenas a componente com a maior contribuição
-
 top_pca <- tidy_pca %>%
-  select(-id) %>% 
-  filter(component %in% paste0("PC", 1:20)) %>%
+  filter(component %in% paste0("PC", 1:6)) %>%
   group_by(component) %>%
   filter(value^2 > mean(value^2)) %>%
+<<<<<<< HEAD
   ungroup() %>% 
   group_by(terms) %>% 
   top_n(1, abs(value)) %>% 
@@ -224,44 +220,21 @@ products_pca <- rt_pca %>%
                   tkts = n_distinct(invoice_no)) %>% 
   #top_n(20, total_revenue) %>% 
   arrange(desc(total_revenue)) %>% 
+=======
+>>>>>>> 7253bba999d3b7f9f57d8240eacd11dad8bcce82
   ungroup()
-  
 
-pca_summary <- rt_pca %>% 
-  group_by(component) %>% 
-  summarise(across(c("quantity", "total_investment", "total_revenue"),
-                   ~sum(.x, na.rm = T)),
-                  across(c("unit_price", "nps"), ~mean(.x, na.rm = T)),
-                  tkts = n_distinct(invoice_no),
-                  products = n_distinct(product)) %>% 
-  mutate(perc_net = round(total_revenue*100/sum(total_revenue),1),
-         perc_tkts = round(tkts*100/sum(tkts),1)) %>% 
-  filter(products > 1) %>% 
-  arrange(desc(total_revenue)) %>% 
-  top_n(20, total_revenue)
-  #filter(total_revenue > mean(total_revenue)) %>% 
-  #ungroup()
+skim(top_pca)
 
-pca_drilldown <- products_pca %>%
-  filter(component %in% pca_summary$component) %>% 
-  group_nest(component) %>% 
-  mutate(id = component,
-    type = "column",
-    # in the drilldown we'll give the mapping via creating the columns
-    data = map(data, mutate, name = product, y = total_revenue),
-    data = map(data, list_parse))
-
-#skim(rt_pca)
-  
-# Análise Produtos -------------
-
-prod_pca <- top_pca %>% 
+products <- top_pca %>% 
   filter(component %in% paste0("PC", 5)) %>% 
   arrange(desc(value)) %>% 
   pull(terms)
 
+# Análise Produtos -------------
+
 rt_mission <- rt_uk %>% 
-  filter(product %in% prod_pca) %>%
+  filter(description %in% products) %>%
   mutate(month_year = as.Date(floor_date(date)),
          total_revenue = quantity * unit_price)
 
@@ -271,11 +244,13 @@ cols_prod <- tibble(col = c("unit_price","tkts" ,"clients",
                name = c("Preço Unitário","Pedidos","Clientes", "Quantidade",
                         "Investimento Total", "Receita Total")) %>% arrange(name)
 
-# Basket Analysis --------------
 
-#ibrary(plyr)
+
+
+# Basket Analysis -----------------------------------------------------------------------------------
 
 #processamento da base
+<<<<<<< HEAD
 #itemList <- ddply(rt_uk,c("customer_id","date"), 
 #                 function(df1)paste(df1$product, 
 #                                    collapse = ","))
@@ -297,7 +272,39 @@ cols_prod <- tibble(col = c("unit_price","tkts" ,"clients",
 #rules.sub <- subset(rules, subset = rhs %in% prod_pca & lift > 2 )
 #rules.sub
 #inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
+=======
+ itemList <- ddply(rt_uk,c("customer_id","date"), 
+                   function(df1)paste(df1$product, 
+                                      collapse = ","))
+ 
+ itemList$customer_id <- NULL
+ itemList$date <- NULL
+ colnames(itemList) <- c("items")
+ 
+write.csv(itemList,"output/market_basket.csv", quote = FALSE, row.names = TRUE)
+tr <- read.transactions('output/market_basket.csv', format = 'basket', sep=',')
 
+>>>>>>> 7253bba999d3b7f9f57d8240eacd11dad8bcce82
+
+#regras de associacao
+rules <- apriori(tr, parameter = list(sup = 0.004, conf = 0.8))
+#inspect(head(rules, n = 10, by = c("confidence", "lift")))
+
+#Filtrar as regras da missao de compra
+rules.sub <- subset(rules, subset = rhs %in% products & lift > 2 )
+
+Regency <-  rules.sub@rhs@itemInfo %>% filter(grepl("REGENCY",labels))
+rules_regency <- subset(rules.sub , subset = rhs %in% Regency$labels )
+
+luch <-  rules.sub@rhs@itemInfo %>% filter(grepl("LUNCH",labels))
+rules_lunch <- subset(rules.sub , subset = rhs %in% luch$labels )
+
+bags <-  rules.sub@rhs@itemInfo %>% filter(!grepl(paste(c("REGENCY","LUNCH"),collapse="|"),labels))
+rules_bags <- subset(rules.sub , subset = rhs %in% bags$labels )
+
+plot(rules_bags  ,
+     engine = 'visNetwork',
+     method = 'graph')
 
 
 # Recomendação --------------
@@ -570,6 +577,7 @@ ggplot(aes(x = unit_price)) +
 
 ### PCA 
 
+<<<<<<< HEAD
 ```{r}
 
 highchartOutput2("drilldown")
@@ -615,10 +623,24 @@ hchart(
   
   
 })
+=======
+```{r echo=FALSE}
+>>>>>>> 7253bba999d3b7f9f57d8240eacd11dad8bcce82
 
+top_pca %>% 
+  group_by(component) %>% 
+  mutate(terms = reorder_within(terms, abs(value), component)) %>% 
+  top_n(10, abs(value)) %>%
+  ggplot(aes(abs(value), terms, fill = if_else(value > 0, 'Positiva','Negativa'))) +
+  geom_col(size = 0.5) +
+  facet_wrap(~component, scales = "free_y", nrow = 3) +
+  scale_y_reordered() +
+  scale_fill_manual(values = c('#4E84C4', '#2d2017')) +
+  labs(x = "Valor absoluto da contribuição",
+       y = NULL, fill = "Contribuição") +
+  theme(text = element_text(size = 8))
 
 ```
-
 
 Missão
 =====================================  
@@ -628,20 +650,11 @@ Parâmetros {.sidebar}
 
 ```{r echo=FALSE}
 
-
-#selectInput("component_2", label = "Componente", choices = pca_summary$component,
-#            multiple = F,
-#            selected =  paste0("PC", 5))
-
-
 selectInput("var_id_2", label = "Variável", choices = cols_prod$name,
             multiple = F,
             selected = cols_prod$name[5])
 
-#uiOutput("products_in")
-
- selectInput("prod_id", label = "Selecione o produto", 
-                choices = append("ALL", prod_pca),
+selectInput("prod_id", label = "Selecione o produto", choices = append("ALL", products),
             multiple = T,
             selected = "ALL")
 
@@ -651,78 +664,7 @@ actionButton("update_button_2", "Atualizar")
 ```
 
 
-```{r warning=FALSE, context="server"}
-
-#products_reactive <- reactive({
-#  
-#  top_pca %>% 
-#  filter(component %in% input$component_id) %>% 
-#  arrange(desc(value)) %>% 
-#  pull(terms)
-#
-#})
-#
-#
-#output$products_in <- renderUI({
-#  
-#    
-#    selectInput("prod_id", label = "Selecione o produto", 
-#                choices = append("ALL", products_reactive()),
-#            multiple = T,
-#            selected = "ALL")
-#    
-#})
-
-selected_products <- reactive({
-  
-  clicks <- input$update_button_2
-  
-isolate({  
-  
- #if("ALL" %in% input$prod_id){products_reactive()}else{input$prod_id}
-  
-  if("ALL" %in% input$prod_id){prod_pca}else{input$prod_id}
-  
-  
- #if("ALL" %in% prod_list){products}else{prod_list}
-  
-})})
-
-selected_col_2 <- reactive({
-  
-    clicks <- input$update_button_2
-  
-  isolate({
-  
-    
-    cols_prod %>% 
-      #filter(name == "Quantidade") %>% 
-      filter(name == input$var_id_2) %>% 
-      pull(col)
-    
-  
-})})
-
-
-
-#rt_mission_reactive <- reactive({
-#  
-# clicks <- input$update_button_2
-#  
-#  isolate({ 
-#  
-#  
-#  rt_uk %>% 
-#  filter(product %in% products_reactive()) %>%
-#  mutate(month_year = as.Date(floor_date(date)),
-#         total_revenue = quantity * unit_price)
-#  
-#})})
-#
-```
-
-
-Row
+Row {.tabset}
 -----------------------------------------------------------------------
 
 ### Dias da semana 
@@ -744,6 +686,33 @@ plotOutput("holiday_chart")
 
 ```{r warning=FALSE, context="server"}
 
+selected_products <- reactive({
+  
+  clicks <- input$update_button_2
+  
+isolate({  
+  
+ if("ALL" %in% input$prod_id){products}else{input$prod_id}
+  
+  
+ #if("ALL" %in% prod_list){products}else{prod_list}
+  
+})})
+
+selected_col_2 <- reactive({
+  
+    clicks <- input$update_button_2
+  
+  isolate({
+  
+    
+    cols_prod %>% 
+      #filter(name == "Quantidade") %>% 
+      filter(name == input$var_id_2) %>% 
+      pull(col)
+    
+  
+})})
 
 rt_days <- reactive({
   
@@ -755,7 +724,7 @@ rt_mission %>%
    mutate(dow = wday(date, label = T, abbr = T),
           full_hour = hour(time),
           holiday = as.factor(holiday)) %>% 
-  filter(product %in% selected_products()) %>%
+  filter(description %in% selected_products()) %>%
   group_by(dow, full_hour, holiday) %>% 
   dplyr::summarise(unit_price = sum(unit_price * quantity)/sum(quantity),
             tkts = n_distinct(invoice_no),
@@ -782,6 +751,15 @@ rt_days() %>%
   scale_fill_viridis_c(labels = scales::label_number_si()) +
   labs(x = "", y = "Hora", title = "Dias Normais", fill = input$var_id_2)
   })
+
+#rt_days %>% 
+#  filter(holiday == 0) %>% 
+#  ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
+#  geom_tile() +
+#  scale_fill_viridis_c(labels = scales::label_number_si()) + 
+#  labs(x = "", y = "Hora", title = "Feriados")
+
+
 })
 
 
@@ -795,74 +773,99 @@ rt_days() %>%
   filter(holiday == 1) %>% 
   ggplot(aes(x = dow, y = full_hour, fill = get(selected_col_2()))) +
   geom_tile() +
-  scale_fill_viridis_c(labels = scales::label_number_si()) +
-  labs(x = "", y = "Hora", title = "Feriados", fill = input$var_id_2)
+  #scale_fill_viridis_c(labels = scales::label_number_si()) +
+  labs(x = "", y = "Hora", title = "Feriados", fill = input$var_id_2
+       )
+  
+#rt_days %>% 
+#  filter(holiday == 1) %>% 
+#  ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
+#  geom_tile() +
+#  scale_fill_viridis_c(labels = scales::label_number_si()) +
+#  labs(x = "", y = "Hora", title = "Feriados")
+  
+  
   })
+  
+  
+  
 })
 
 ```
 
 
-Row
------------------------------------------------------------------------
+### Dias da semana 2
+
+```{r}
+
+plotOutput("days_bar")
+
+
+```
+
+
+```{r context = "server"}
+
+
+output$days_bar <- renderPlot({
+  
+    clicks <- input$update_button_2
+  
+  isolate({
+  
+rt_days() %>% 
+  ggplot(aes(y = get(selected_col_2()), x = full_hour, fill = holiday)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~dow, nrow = 3)
+  
+  })
+    
+})
+
+```
+
 
 ### Evolução
 
 ```{r echo =FALSE}
 
 
-plotOutput("sales_line")
+#plotOutput("sales_line")
 
 ```
 
 
 ```{r warning=FALSE, context="server"}
 
-output$sales_line <- renderPlot({
-  
-  clicks <- input$update_button_2
-  
-isolate({  
-  
-acc_prod <- rt_mission %>% 
-  filter(product %in% selected_products()) %>%
-  group_by(month_year) %>%
-  arrange(month_year) %>% 
-  select(month_year, product, everything()) %>% 
-  summarise(unit_price = sum(unit_price * quantity)/sum(quantity),
-            tkts = n_distinct(invoice_no),
-            clients = n_distinct(customer_id),
-            nps = mean(nps),
-            across(c("quantity", "total_investment", "total_revenue"), ~sum(.x, na.rm = T))) %>% 
-  mutate(acc_quantity = cumsum(quantity),
-         acc_total_investment = cumsum(total_investment),
-         acc_total_revenue = cumsum(total_revenue),
-         acc_clients = cumsum(clients),
-         acc_tkts = cumsum(tkts),
-         acc_nps = nps,
-         acc_unit_price = unit_price)
-    
-col <- paste0("acc_", selected_col_2())
-
-acc_prod %>% 
-   ggplot(aes(x = month_year, 
-              #y = acc_total_revenue, 
-              y = get(col), 
-              )) +
-   geom_line() + labs(y = input$var_id_2, x = "")
-   
- #prod_summary() %>%  
- #  hchart(., "line", 
- #         hcaes(x = month_year, 
- #               y = selected,
- #               group = description,
- #               y = quantity
- #               )) %>% 
- #  hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
- # 
-  })})
+#output$sales_line <- renderPlot({
+#  
+#  clicks <- input$update_button
+#  
+#isolate({  
+#  
+#  #prod_summary() %>% 
+#  #prod_summary %>% 
+#  #  ggplot(aes(x = month_year, 
+#  #             #y = selected_col(), 
+#  #             y = quantity, 
+#  #             color = description)) +
+#  #  geom_line() +
+#  #  labs(y = input$var_id, x = "")
+#  #  
+# # prod_summary() %>%  
+# #   hchart(., "line", 
+# #          hcaes(x = month_year, 
+# #                y = selected,
+# #                group = description,
+# #                y = quantity
+# #                )) %>% 
+# #   hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
+#  
+#  })})
+#
 
 ```
+
 
 Regras de Associação
 =====================================  
@@ -875,25 +878,20 @@ Row {.tabset}
 ```{r echo = FALSE}
 
 #Grafico ARULES
-#plot(rules.sub,
-#     engine = 'visNetwork',
-#     method = 'graph')
-#     #control = list(nodeCol='darkblue'))
-#
-```
+plot(rules_regency  ,
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
 
 
-
-```{r warning=FALSE, context="server"}
-
-##Filtrar as regras da missao de compra
-#PRECISA ATUALIZAR O df1$nome PELA LISTA DE PRODUTOS FOCO NOSSA
-#rules.sub <- subset(rules, subset = rhs %in% prod_pca & lift > 2 )
-#rules.sub
-#inspect(head(rules.sub, n = 30, by = c("confidence", "lift")))
-
+#Grafico ARULES
+plot(rules.sub[100:131],
+     engine = 'visNetwork',
+     method = 'graph')
+     #control = list(nodeCol='darkblue'))
 
 ```
+
 
 Row {.tabset}
 -----------------------------------------------------------------------

@@ -347,11 +347,11 @@ stopword <- str_c(str_to_upper(c('set','of', 'with', 'and', 'colour')), collapse
 
 retail_2 <- 
   retail %>% 
-  mutate(Description_2 = str_replace_all(Description, size,"")) %>% 
-  mutate(Description_2 = str_replace_all(Description_2, material,"")) %>% 
-  mutate(Description_2 = str_replace_all(Description_2, stopword,"")) %>% 
-  mutate(Description_2 = str_replace_all(Description_2, colours,"")) %>%
-  mutate(Description_2 = str_replace_all(Description_2, numbers,"")) %>% 
+  mutate(Description_2 = str_replace_all(Description,size,"")) %>% 
+  mutate(Description_2 = str_replace_all(Description_2,material,"")) %>% 
+  mutate(Description_2 = str_replace_all(Description_2,stopword,"")) %>% 
+  mutate(Description_2 = str_replace_all(Description_2,colours,"")) %>%
+  mutate(Description_2 = str_replace_all(Description_2,numbers,"")) %>% 
   mutate(Description_2 = str_replace_all(Description_2, "\\W", " ")) %>% 
   mutate(Description_2 = str_replace_all(Description_2, "\\s+$", "")) %>%
   mutate(Description_2 = str_replace_all(Description_2, "^\\s+", "")) %>%

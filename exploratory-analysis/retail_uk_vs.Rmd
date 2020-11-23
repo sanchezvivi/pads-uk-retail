@@ -191,7 +191,7 @@ tidy_pca <- rec_pca %>%
 
 variance_pct <- rec_pca$steps[[2]]$res
 
-(cumsum(variance_pct$sdev^2) / sum(variance_pct$sdev^2))
+#(cumsum(variance_pct$sdev^2) / sum(variance_pct$sdev^2))
 
 retail_pca <- juice(rec_pca) %>% glimpse
 
@@ -383,7 +383,7 @@ rt_days %>%
   ggplot(aes(x = dow, y = full_hour, fill = total_revenue)) +
   geom_tile() +
   scale_fill_viridis_c(labels = scales::label_number_si()) + 
-  labs(x = "", y = "Hora", title = "Dias normais")
+  labs(x = "", y = "Hora", title = "Feriados")
   
 
 rt_days %>% 
