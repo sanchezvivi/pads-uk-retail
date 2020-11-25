@@ -23,7 +23,7 @@ tickets2 <- rt_uk %>%
   mutate(foco = if_else(str_detect(product, SearchPattern, negate = TRUE),0,1),
         arules_rhs = if_else(str_detect(product, search_rhs, negate = TRUE),0,1),
         arules_lhs = if_else(str_detect(product, search_lhs, negate = TRUE),0,1)) %>% 
-  select(product, foco, arules_rhs, arules_lhs) #%>% filter(arules_lhs == 1)
+  select(product, foco, arules_rhs, arules_lhs) %>%  #%>% filter(arules_lhs == 1)
   group_by(product, date, time, holiday, year, month,
            colour, made_from, package) %>%
   summarise(across(c("quantity", "total_revenue", 
@@ -41,7 +41,7 @@ tickets2 <- rt_uk %>%
   select(-time) %>% 
   replace_na(list(colour = "none", made_from = "none", package = "none"))
 
-skim(tickets2)
+#skim(tickets2)
 
 set.seed(123)
 split <- initial_split(tickets2, prop = 0.8)

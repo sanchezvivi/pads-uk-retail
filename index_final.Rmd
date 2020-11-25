@@ -7,7 +7,7 @@ output:
     orientation: rows
     vertical_layout: fill
     theme: lumen
-runtime: shiny_prerendered
+runtime: shiny
 ---
 
 ```{r setup, include=FALSE, warning=FALSE}
@@ -152,12 +152,11 @@ size <- str_c(str_to_upper(c('small', 'large', 'jumbo', 'box', 'pack',
 material <- str_c(str_to_upper(c('metal','wooden', 'wood', 'glass',
                                  'silver', 'ceramic', 'acrylic','amber',
                                  'amethyst', 'cooper', 'gold',  'zinc', 'tin',
-                                 'wire','crystal','diamante','iron' )), 
-                  collapse="|")
+                                 'wire','crystal','diamante','iron')), collapse="|")
 
-stopword <- str_c(str_to_upper(c(' with',' colour')), collapse="|")
+#stopword <- str_c(str_to_upper(c(' with',' colour')), collapse="|")
 
-filters <- str_c(c(size, material, stopword, colours, numbers), collapse = "|")
+filters <- str_c(c(size, material, colours, numbers), collapse = "|")
 
 rt_uk <- rt_uk_prep %>% 
   mutate(product = str_replace_all(description, filters,""),
@@ -171,8 +170,6 @@ rt_uk <- rt_uk_prep %>%
   
 #rt_uk %>% fill("none") %>% skim()
  
-  
-
 # PCA -------------
 
 pca_prep <- rt_uk %>% 
@@ -202,7 +199,9 @@ tidy_pca <- rec_pca %>%
   tidy(id = "pca")
 
 top_pca <- tidy_pca %>%
-  filter(component %in% paste0("PC", 1:6)) %>%
+  select(-id) %>% 
+  filter(component %in% paste0("PC", 1:20)) %>%
+  #filter(component %in% paste0("PC", 1:6)) %>%
   group_by(component) %>%
   filter(value^2 > mean(value^2)) %>%
   ungroup() %>% 
@@ -211,6 +210,7 @@ top_pca <- tidy_pca %>%
   ungroup() %>% 
   arrange(terms)
 
+  
 rt_pca <- rt_uk %>% 
   left_join(top_pca, by = c("product" ="terms")) %>% 
   filter(!is.na(component))
@@ -224,6 +224,30 @@ products_pca <- rt_pca %>%
   #top_n(20, total_revenue) %>% 
   arrange(desc(total_revenue)) %>% 
   ungroup()
+
+pca_summary <- rt_pca %>% 
+  group_by(component) %>% 
+  summarise(across(c("quantity", "total_investment", "total_revenue"),
+                   ~sum(.x, na.rm = T)),
+                  across(c("unit_price", "nps"), ~mean(.x, na.rm = T)),
+                  tkts = n_distinct(invoice_no),
+                  products = n_distinct(product)) %>% 
+  mutate(perc_net = round(total_revenue*100/sum(total_revenue),1),
+         perc_tkts = round(tkts*100/sum(tkts),1)) %>% 
+  filter(products > 1) %>% 
+  arrange(desc(total_revenue)) %>% 
+  top_n(20, total_revenue)
+  #filter(total_revenue > mean(total_revenue)) %>% 
+  #ungroup()
+
+pca_drilldown <- products_pca %>%
+  filter(component %in% pca_summary$component) %>% 
+  group_nest(component) %>% 
+  mutate(id = component,
+    type = "column",
+    # in the drilldown we'll give the mapping via creating the columns
+    data = map(data, mutate, name = product, y = total_revenue),
+    data = map(data, list_parse))
 
 #skim(top_pca)
 
@@ -268,8 +292,8 @@ rules <- apriori(tr, parameter = list(sup = 0.004, conf = 0.8))
 #Filtrar as regras da missao de compra
 rules.sub <- subset(rules, subset = rhs %in% products & lift > 2 )
 
-direita <- rules.sub@rhs@itemInfo
-esquerda <- rules.sub@lhs@itemInfo
+#direita_raw <- rules.sub@rhs@itemInfo
+#esquerda_raw <- rules.sub@lhs@itemInfo
 
 Regency <-  rules.sub@rhs@itemInfo %>% filter(grepl("REGENCY",labels))
 rules_regency <- subset(rules.sub , subset = rhs %in% Regency$labels )
@@ -665,7 +689,7 @@ actionButton("update_button_2", "Atualizar")
 ```
 
 
-Row {.tabset}
+Row 
 -----------------------------------------------------------------------
 
 ### Dias da semana 
@@ -794,76 +818,64 @@ rt_days() %>%
 
 ```
 
-
-### Dias da semana 2
-
-```{r}
-
-plotOutput("days_bar")
-
-
-```
-
-
-```{r context = "server"}
-
-
-output$days_bar <- renderPlot({
-  
-    clicks <- input$update_button_2
-  
-  isolate({
-  
-rt_days() %>% 
-  ggplot(aes(y = get(selected_col_2()), x = full_hour, fill = holiday)) +
-  geom_col(position = "dodge") +
-  facet_wrap(~dow, nrow = 3)
-  
-  })
-    
-})
-
-```
-
-
+Row
+--------------------
 ### Evolução
 
 ```{r echo =FALSE}
 
 
-#plotOutput("sales_line")
+plotOutput("sales_line")
 
 ```
 
 
 ```{r warning=FALSE, context="server"}
 
-#output$sales_line <- renderPlot({
-#  
-#  clicks <- input$update_button
-#  
-#isolate({  
-#  
-#  #prod_summary() %>% 
-#  #prod_summary %>% 
-#  #  ggplot(aes(x = month_year, 
-#  #             #y = selected_col(), 
-#  #             y = quantity, 
-#  #             color = description)) +
-#  #  geom_line() +
-#  #  labs(y = input$var_id, x = "")
-#  #  
-# # prod_summary() %>%  
-# #   hchart(., "line", 
-# #          hcaes(x = month_year, 
-# #                y = selected,
-# #                group = description,
-# #                y = quantity
-# #                )) %>% 
-# #   hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
-#  
-#  })})
-#
+output$sales_line <- renderPlot({
+  
+  clicks <- input$update_button_2
+  
+isolate({  
+  
+acc_prod <- rt_mission %>% 
+  filter(product %in% selected_products()) %>%
+  group_by(month_year) %>%
+  arrange(month_year) %>% 
+  select(month_year, product, everything()) %>% 
+  summarise(unit_price = sum(unit_price * quantity)/sum(quantity),
+            tkts = n_distinct(invoice_no),
+            clients = n_distinct(customer_id),
+            nps = mean(nps),
+            across(c("quantity", "total_investment", "total_revenue"), ~sum(.x, na.rm = T))) %>% 
+  mutate(acc_quantity = cumsum(quantity),
+         acc_total_investment = cumsum(total_investment),
+         acc_total_revenue = cumsum(total_revenue),
+         acc_clients = cumsum(clients),
+         acc_tkts = cumsum(tkts),
+         acc_nps = nps,
+         acc_unit_price = unit_price)
+    
+col <- paste0("acc_", selected_col_2())
+
+acc_prod %>% 
+   ggplot(aes(x = month_year, 
+              #y = acc_total_revenue, 
+              y = get(col), 
+              )) +
+   geom_line() + 
+  labs(y = input$var_id_2, x = "")
+   
+ #prod_summary() %>%  
+ #  hchart(., "line", 
+ #         hcaes(x = month_year, 
+ #               y = selected,
+ #               group = description,
+ #               y = quantity
+ #               )) %>% 
+ #  hc_xAxis(title = list(text = "Data")) #%>% hc_yAxis(title = list(text = input$var_id))
+ # 
+  })})
 
 ```
 
@@ -892,10 +904,10 @@ plot(rules_regency  ,
 ```{r}
 
 #Grafico ARULES
-plot(rules.sub[100:108],
-     engine = 'visNetwork',
-     method = 'graph')
-     #control = list(nodeCol='darkblue'))
+#plot(rules.sub[100:108],
+#     engine = 'visNetwork',
+#     method = 'graph')
+#     #control = list(nodeCol='darkblue'))
 
 ```
 
