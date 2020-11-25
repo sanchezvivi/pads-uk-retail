@@ -321,15 +321,15 @@ head(groups, n = 5)
 
 
 ```{r}
-retail_word <- retail_2 %>% select(Description_2)
+retail_word <- retail %>% select(Description)
 retail_word <- str_c(retail_word, collapse="|")
 
   retail_word <- 
   data.frame(text = retail_word,stringsAsFactors = F) %>% 
-  unnest_tokens(word, text) %>% count()
+  unnest_tokens(word, text) %>% plyr::count()
 
-freq_by_rank <- retail_word %>% arrange(desc(freq)) 
-
+freq_by_rank <- retail_word %>% dplyr::arrange(desc(freq)) 
+freq_by_rank
 
 ```
 
@@ -342,8 +342,9 @@ colours <- str_c(str_to_upper(colors()), collapse="|")
 numbers <- str_c(c("1","2","3","4","5","6","7","8","9","0"), collapse="|")
 #stop_words <- str_c(get_stopwords()[1], collapse="|")
 size <- str_c(str_to_upper(c('small', 'large', 'jumbo', 'box', 'pack', 'cases', 'kit')), collapse="|")
-material <- str_c(str_to_upper(c('metal','wooden', 'wood', 'glass', 'silver', 'ceramic')), collapse="|")
-stopword <- str_c(str_to_upper(c('set','of', 'with', 'and', 'colour')), collapse="|")
+material <- str_c(str_to_upper(c('metal','wooden', 'wood', 'glass', 'silver', 'ceramic', 'acrylic','amber','amethyst', 'cooper', 'gold',  'zinc', 'tin',
+'wire','crystal','diamante','iron' )), collapse="|")
+stopword <- str_c(str_to_upper(c('set', 'with', 'colour')), collapse="|")
 
 retail_2 <- 
   retail %>% 
@@ -365,11 +366,38 @@ tail(retail_2$Description_2,5)
 
 ```
 
+```{r}
+
+colours <- str_c(str_to_upper(colors()), collapse="|")
+material <- str_c(str_to_upper(c('metal','wooden', 'wood', 'glass', 'silver', 'ceramic', 'acrylic','amber','amethyst', 'cooper', 'gold',  'zinc', 'tin',
+'wire','crystal','diamante','iron' )), collapse="|")
+size <- str_c(str_to_upper(c('small', 'large', 'jumbo', 'box', 'pack', 'cases', 'kit')), collapse="|")
+
+retail_2 <- 
+  retail %>% 
+    mutate(cores = str_extract(Description, colours)) %>% 
+    mutate(material = str_extract(Description, material)) %>% 
+    mutate(size = str_extract(Description, size))
+
+head(retail_2,5)
+
+tail(retail_2$Description_2,5)
 
 
 
 
+```
 
+# PRODUTOS DISTINTOS
+```{r}
+retail_2 <- 
+  retail %>% 
+    mutate(Description_2 = str_replace_all(Description, c('ANT' = 'ANTIQUE','TURQ = TURQUESA','ASS = ASSORTED','ASSTD = ASSORTED','CUPCAKE' = 'CUP CAKES','CUPCAKES' = 'CUP CAKES','DRAWERKNOB' = 'DRAWER KNOB','ED' = 'EDWARDIAN'))) 
+```
+# PRODUTOS DISTINTOS
+```{r}
+retail %>% distinct(Description) %>% count()
+retail_2 %>% distinct(Description_2) %>% count()
 
-
+```
 
