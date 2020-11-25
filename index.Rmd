@@ -12,6 +12,10 @@ runtime: shiny_prerendered
 
 ```{r setup, include=FALSE, warning=FALSE}
 
+#cria markdown com variáveis do global env para carregar mais rápido
+#rmarkdown::render("index.Rmd", envir=.GlobalEnv)
+
+
 knitr::opts_chunk$set(echo = FALSE)
 
 library(readxl)
@@ -68,6 +72,8 @@ hc_cols <- c("#7cb5ec", "#434348", "#90ed7d", "#f7a35c",
              "#8085e9", "#f15c80", "#e4d354", "#2b908f", 
              "#f45b5b", "#91e8e1")
 
+
+
 ```
 
 
@@ -119,7 +125,7 @@ foras <- tickets %>%
 
 clientes <- retail %>% 
   group_by(customer_id,invoice_no) %>%
-  summarise(Tkt = length(unique(invoice_no)) ,Qty = sum(quantity), Net = sum(total_revenue)) %>%
+  summarise(Tkt = length(unique(invoice_no)), Qty = sum(quantity), Net = sum(total_revenue)) %>%
   group_by(customer_id) %>%
   summarise(Tkt = sum(Tkt) ,Qty = sum(Qty), Net = sum(Net)) %>%
   arrange(desc(Net))
@@ -163,7 +169,7 @@ rt_uk <- rt_uk_prep %>%
          made_from = str_extract(description, material),
          package = str_extract(description, size))
   
-rt_uk %>% fill("none") %>% skim()
+#rt_uk %>% fill("none") %>% skim()
  
   
 
@@ -219,7 +225,7 @@ products_pca <- rt_pca %>%
   arrange(desc(total_revenue)) %>% 
   ungroup()
 
-skim(top_pca)
+#skim(top_pca)
 
 products <- top_pca %>% 
   filter(component %in% paste0("PC", 5)) %>% 
@@ -244,7 +250,7 @@ cols_prod <- tibble(col = c("unit_price","tkts" ,"clients",
 
 # Basket Analysis ------------------------------------------------------
 
-# itemList <- ddply(rt_uk,c("customer_id","date"), 
+# itemList <- plyr::ddply(rt_uk,c("customer_id","date"), 
 #                   function(df1)paste(df1$product, 
 #                                      collapse = ","))
 # 
@@ -268,20 +274,15 @@ esquerda <- rules.sub@lhs@itemInfo
 Regency <-  rules.sub@rhs@itemInfo %>% filter(grepl("REGENCY",labels))
 rules_regency <- subset(rules.sub , subset = rhs %in% Regency$labels )
 
-luch <-  rules.sub@rhs@itemInfo %>% filter(grepl("LUNCH",labels))
-rules_lunch <- subset(rules.sub , subset = rhs %in% luch$labels )
+lunch <-  rules.sub@rhs@itemInfo %>% filter(grepl("LUNCH",labels))
+rules_lunch <- subset(rules.sub , subset = rhs %in% lunch$labels )
 
 bags <-  rules.sub@rhs@itemInfo %>% filter(!grepl(paste(c("REGENCY","LUNCH"),collapse="|"),labels))
 rules_bags <- subset(rules.sub , subset = rhs %in% bags$labels )
 
-plot(rules_bags  ,
-     engine = 'visNetwork',
-     method = 'graph')
-
-
 # Recomendação --------------
 
-#source("logit_backup.R")
+#source("logit_products.R")
 
 
 ```
@@ -396,7 +397,8 @@ isolate({
                  names_prefix = "perc_",
                  names_to = "variable",
                  values_to = "pct") %>% 
-    mutate(variable = if_else(variable == "net","Faturamento", "Transações")) %>% 
+    mutate(variable = if_else(variable == "net","Faturamento", 
+                              "Transações")) %>% 
     hchart(., "column", 
            hcaes(x = country, #reorder(country,desc(perc_net)), 
                  y = pct,
@@ -421,7 +423,12 @@ rt_uk %>%
 ```
 
 
-### Distribuição por transação
+### Vendas por transação
+
+- Vemos que os tickets apresentam uma distribuição assimétrica com uma cauda longa a direita, ou seja temos grande quantidade de tickets com valores elevados, deslocando, assim, a média da mediana.
+
+- Para nossa análise, faremos exclusão das compras a cima de $50k que demostram um comportamento atípico.
+
 
 ```{r echo = FALSE}
 
@@ -489,6 +496,8 @@ tickets %>%
 
 ### Preços
 
+- Preços de produtos também apresentam assimetria com calda longa a esquerda, mas para o modelo de cestas não achamos necessário fazer nenhum filtro.
+
 ```{r}
 
 plotOutput("histogram")
@@ -518,7 +527,8 @@ isolate({
   
 retail %>% 
 ggplot(aes(x = unit_price)) + 
-  geom_histogram(binwidth = 1) + coord_cartesian(xlim = c(0, 20))+
+  geom_histogram(binwidth = 1) +
+    coord_cartesian(xlim = c(0, 20))+
   geom_vline(aes(xintercept=median(unit_price)),
             color="blue", linetype="dashed", size=1) +
    geom_vline(aes(xintercept=mean(unit_price)),
@@ -533,23 +543,40 @@ ggplot(aes(x = unit_price)) +
 
 ### Clientes
 
+- Vemos que os clientes também possuem uma dispersão assimétirca com muitos clientes fazendo um grande número de pedidos.
+ 
+- Para a análise decidimos tirar os casos mais atípicos, traçando um corte em de clientes até 100 pedidos.
+
 ```{r}
 
-
-
+plotOutput("hist_clients")
 
 ```
 
 ```{r warning=FALSE, context="server"}
 
+output$hist_clients <- renderPlot({
+  
+  clicks <- input$update_button
+  
+    isolate({
 
+ggplot(clientes, aes(x=Tkt)) + 
+  geom_histogram(binwidth=1) + 
+        coord_cartesian(xlim = c(0, 35))+
+  geom_vline(aes(xintercept=median(Tkt)),
+            color="blue", linetype="dashed", size=1)+
+   geom_vline(aes(xintercept=mean(Tkt)),
+            color="red", linetype="dashed", size=1)+
+  labs(title = "Pedido por cliente", x = "Pedidos", y = "Clientes")
+
+})})
 
 ```
 
 
 ### PCA 
 
-<<<<<<< HEAD
 ```{r}
 
 highchartOutput2("drilldown")
@@ -595,24 +622,25 @@ hchart(
   
   
 })
-```
 
+#```
+#
+#
+#```{r echo=FALSE}
 
-```{r echo=FALSE}
-
-top_pca %>% 
-  group_by(component) %>% 
-  mutate(terms = reorder_within(terms, abs(value), component)) %>% 
-  top_n(10, abs(value)) %>%
-  ggplot(aes(abs(value), terms, fill = if_else(value > 0, 'Positiva','Negativa'))) +
-  geom_col(size = 0.5) +
-  facet_wrap(~component, scales = "free_y", nrow = 3) +
-  scale_y_reordered() +
-  scale_fill_manual(values = c('#4E84C4', '#2d2017')) +
-  labs(x = "Valor absoluto da contribuição",
-       y = NULL, fill = "Contribuição") +
-  theme(text = element_text(size = 8))
-
+#top_pca %>% 
+#  group_by(component) %>% 
+#  mutate(terms = reorder_within(terms, abs(value), component)) %>% 
+#  top_n(10, abs(value)) %>%
+#  ggplot(aes(abs(value), terms, fill = if_else(value > 0, 'Positiva','Negativa'))) +
+#  geom_col(size = 0.5) +
+#  facet_wrap(~component, scales = "free_y", nrow = 3) +
+#  scale_y_reordered() +
+#  scale_fill_manual(values = c('#4E84C4', '#2d2017')) +
+#  labs(x = "Valor absoluto da contribuição",
+#       y = NULL, fill = "Contribuição") +
+#  theme(text = element_text(size = 8))
+#
 ```
 
 Missão
@@ -846,7 +874,7 @@ Regras de Associação
 Row {.tabset}
 -----------------------------------------------------------------------
 
-### Rede de Produtos
+### Regras
 
 ```{r echo = FALSE}
 
@@ -857,19 +885,17 @@ plot(rules_regency  ,
      #control = list(nodeCol='darkblue'))
 
 
+```
+
+### Regency
+
+```{r}
+
 #Grafico ARULES
-plot(rules.sub[100:131],
+plot(rules.sub[100:108],
      engine = 'visNetwork',
      method = 'graph')
      #control = list(nodeCol='darkblue'))
-
-```
-
-
-Row {.tabset}
------------------------------------------------------------------------
-
-```{r}
 
 ```
 

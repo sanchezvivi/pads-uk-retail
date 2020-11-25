@@ -1,20 +1,39 @@
 
 #logit
 
+
 #padrao para achar os produtos focos
 SearchPattern <- paste(products, collapse = "|")
 
+direita <- as_tibble(rules.sub@rhs@itemInfo)%>% 
+          filter(!str_detect(labels, numbers)) %>% 
+          pull(labels)
+
+search_rhs <- paste(direita, collapse = "|")
+
+esquerda <- as_tibble(rules.sub@lhs@itemInfo) %>% 
+            filter(!str_detect(labels, numbers)) %>% 
+            pull(labels)
+
+search_lhs <- paste(esquerda, collapse = "|")
+
 #criar uma base por Invoice, identificando Invoices com produtos foco
 tickets2 <- rt_uk %>% 
-  mutate(foco = if_else(str_detect(description, SearchPattern, negate = TRUE),0,1)) %>% 
-  group_by(invoice_no, date, time, holiday, year, month,
-           colour, made_from, package, ) %>%
-  summarise(Quantidade = sum(quantity), Receita = sum(total_revenue),
-            Foco = sum(foco)) %>% 
+  select(-stock_code, -invoice_date, -country) %>% 
+  mutate(foco = if_else(str_detect(product, SearchPattern, negate = TRUE),0,1),
+        arules_rhs = if_else(str_detect(product, search_rhs, negate = TRUE),0,1),
+        arules_lhs = if_else(str_detect(product, search_lhs, negate = TRUE),0,1)) %>% 
+  select(product, foco, arules_rhs, arules_lhs) #%>% filter(arules_lhs == 1)
+  group_by(product, date, time, holiday, year, month,
+           colour, made_from, package) %>%
+  summarise(across(c("quantity", "total_revenue", 
+                     "foco", "arules_rhs", "arules_lhs"), sum)) %>% 
+  arrange(desc(total_revenue)) %>%
+  #summarise(Quantidade = sum(quantity), Receita = sum(total_revenue),
+  #          Foco = sum(foco)) %>% 
   arrange(desc(Receita)) %>%
   ungroup() %>% 
-
-  mutate(Foco = as.factor(if_else(Foco >0,1,0)), 
+  mutate(#Foco = as.factor(if_else(Foco> 0,1,0)), 
         #holiday = as.factor(holiday),
         week = ceiling(day(date) / 7), #Criacao de Semana e dia da semana
         weekday = wday(date),
