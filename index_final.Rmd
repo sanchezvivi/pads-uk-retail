@@ -43,10 +43,13 @@ library(tidytext)
 library(tidymodels)
 library(tidyverse)
 
+library(vip)
+
 library(conflicted) 
 #library(plyr) 
 
 conflict_prefer("filter", "dplyr")
+conflict_prefer("vi", "vip")
 #conflict_prefer("mutate", "dplyr")
 #conflict_prefer("arrange", "dplyr")
 #conflict_prefer("pivot_longer", "dplyr")
@@ -296,6 +299,37 @@ rules.sub <- subset(rules, subset = rhs %in% products & lift > 2)
 
 #source("logit_products.R")
 
+tickets2 <- read_csv("output/tickets2.csv") %>% 
+  mutate(foco = as_factor(foco))
+
+set.seed(123)
+split <- initial_split(tickets2, prop = 0.8)
+
+tr <- training(split)
+ts <- testing(split)
+
+receita <- recipe(foco ~ ., data = tr) %>% #com os dados de treino
+  #update_role(invoice_no, date, new_role = "id") %>% 
+  #step_rm(invoice_no, date, year) %>% #retira o user_id e a variável impacto (vamos apenas usar influência)
+  step_dummy(made_from, colour, package) %>% 
+  step_interact(terms = ~holiday:hour) %>% 
+  step_normalize(all_numeric())  #normaliza variaveis numericas
+
+receita_prep <- prep(receita)
+
+treinamento_proc <- bake(receita_prep, new_data = tr)
+teste_proc <- bake(receita_prep, new_data = ts) 
+
+#doParallel::registerDoParallel(cores = 6)
+
+glm_spec <- logistic_reg() %>%
+  set_engine("glm") %>% 
+  set_mode("classification") 
+
+glm_fit <- glm_spec %>% 
+  fit(foco ~ ., treinamento_proc)
+
+predicted <- read_csv("output/predicted.csv")
 
 ```
 
@@ -322,9 +356,9 @@ selectInput("var_id", label = "Variável", choices = cols_map$name,
             multiple = F,
             selected = "Receita Total")
 
-selectInput("group_id", label = "Agrupamento", choices = group_tb$group_name,
-            multiple = F,
-            selected = "Pedido")
+#selectInput("group_id", label = "Agrupamento", choices = group_tb$group_name,
+#            multiple = F,
+#            selected = "Pedido")
 
 
 actionButton("update_button", "Atualizar")
@@ -417,12 +451,11 @@ isolate({
 
 ### Vendas por transação
 
-- Vemos que os tickets apresentam uma distribuição assimétrica com uma cauda longa a direita, ou seja temos grande quantidade de tickets com valores elevados, deslocando, assim, a média da mediana.
-
-- Para nossa análise, faremos exclusão das compras a cima de $50k que demostram um comportamento atípico.
-
-
 ```{r echo = FALSE}
+
+#- Vemos que os tickets apresentam uma distribuição assimétrica com uma cauda longa a direita, ou seja temos grande quantidade de tickets com valores elevados, deslocando, assim, a média da mediana.
+
+#- Para nossa análise, faremos exclusão das compras a cima de $50k que demostram um comportamento atípico.
 
 #plotOutput("histogram")
 #
@@ -488,11 +521,13 @@ tickets %>%
 
 ### Preços
 
-- Preços de produtos também apresentam assimetria com calda longa a esquerda, mas para o modelo de cestas não achamos necessário fazer nenhum filtro.
+
 
 ```{r}
 
 plotOutput("histogram")
+
+#- Preços de produtos também apresentam assimetria com calda longa a esquerda, mas para o modelo de cestas não achamos necessário fazer nenhum filtro.
 
 ```
 
@@ -535,14 +570,14 @@ ggplot(aes(x = unit_price)) +
 
 ### Clientes
 
-- Vemos que os clientes também possuem uma dispersão assimétirca com muitos clientes fazendo um grande número de pedidos.
- 
-- Para a análise decidimos tirar os casos mais atípicos, traçando um corte em de clientes até 100 pedidos.
-
 ```{r}
 
 plotOutput("hist_clients")
 
+#- Vemos que os clientes também possuem uma dispersão assimétirca com muitos clientes #fazendo um grande número de pedidos.
+# 
+#- Para a análise decidimos tirar os casos mais atípicos, traçando um corte em de #clientes até 100 pedidos.
+#
 ```
 
 ```{r warning=FALSE, context="server"}
@@ -651,30 +686,6 @@ plot(rules.sub  ,
 ```
 
 
-Regressão
-=====================================  
-
-Row {.sidebar}
------------------------------------------------------------------------
-
-### Selecione os produtos
-
-```{r}
-
-```
-
-
-Row {.tabset}
------------------------------------------------------------------------
-
-### Resultados
-
-```{r}
-
-
-
-
-```
 
 Missão
 =====================================  
@@ -889,8 +900,47 @@ acc_prod %>%
 ```
 
 
+Recomendação
+=====================================  
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Resultados
+
+```{r echo = FALSE}
+
+
+vip::vip(glm_fit)
+
+
+```
+
+### Recomendação
+
+```{r}
+
+predicted %>% 
+  filter(foco.y == 1) %>% 
+  na.omit %>% 
+  ggplot(aes(x = wday(weekday, label = T, abbr = T) , 
+             y = hour, fill = .pred_0)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::percent_format(),
+                       #trans = "log"
+                       ) +
+  #facet_wrap(~ foco.x, nrow = 2) +
+  labs(fill = "Probabilidade de compra", x = "")
+
+```
+
+Conclusão
+=====================================  
+
+```{r}
 
 
 
 
+```
 
