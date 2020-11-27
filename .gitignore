@@ -58,4 +58,4 @@ vignettes/*.pdf
 retail.csv
 index_files
 index_data
-*.csv
+retail.csv

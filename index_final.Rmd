@@ -1,6 +1,6 @@
 ---
 title: "Análise de cesta de Compras"
-author: "Debora, Renato, Viviane"
+author: "Débora, Renato, Viviane"
 date: "11/14/2020"
 output:
   flexdashboard::flex_dashboard:
@@ -286,23 +286,11 @@ cols_prod <- tibble(col = c("unit_price","tkts" ,"clients",
 tr <- read.transactions('output/market_basket.csv', format = 'basket', sep=',')
 
 #regras de associacao
-rules <- apriori(tr, parameter = list(sup = 0.004, conf = 0.8))
+rules <- apriori(tr, parameter = list(sup = 0.0035, conf = 0.8))
 #inspect(head(rules, n = 10, by = c("confidence", "lift")))
 
 #Filtrar as regras da missao de compra
-rules.sub <- subset(rules, subset = rhs %in% products & lift > 2 )
-
-#direita_raw <- rules.sub@rhs@itemInfo
-#esquerda_raw <- rules.sub@lhs@itemInfo
-
-Regency <-  rules.sub@rhs@itemInfo %>% filter(grepl("REGENCY",labels))
-rules_regency <- subset(rules.sub , subset = rhs %in% Regency$labels )
-
-lunch <-  rules.sub@rhs@itemInfo %>% filter(grepl("LUNCH",labels))
-rules_lunch <- subset(rules.sub , subset = rhs %in% lunch$labels )
-
-bags <-  rules.sub@rhs@itemInfo %>% filter(!grepl(paste(c("REGENCY","LUNCH"),collapse="|"),labels))
-rules_bags <- subset(rules.sub , subset = rhs %in% bags$labels )
+rules.sub <- subset(rules, subset = rhs %in% products & lift > 2)
 
 # Recomendação --------------
 
@@ -317,15 +305,7 @@ Introdução
 
 ```{r echo=FALSE}
 
-#Slide - Como aumentar as vendas?
-
-```
-
-```{r}
-
-
-
-
+include_graphics("img/CAPA.PNG")
 
 ```
 
@@ -434,18 +414,6 @@ isolate({
  # })
 
 ```
-
-### Vendas por produto
-
-```{r echo=FALSE}
-
-rt_uk %>% 
-  group_by(description) %>%
-  summarise(Quantidade = sum(quantity), Receita = sum(total_revenue)) %>% 
-  arrange(desc(Receita)) %>% kable()
-
-```
-
 
 ### Vendas por transação
 
@@ -667,6 +635,47 @@ hchart(
 #
 ```
 
+
+Regras de Associação
+=====================================  
+
+### Regras
+
+```{r echo = FALSE}
+
+plot(rules.sub  ,
+     engine = 'visNetwork',
+     method = 'graph')
+
+
+```
+
+
+Regressão
+=====================================  
+
+Row {.sidebar}
+-----------------------------------------------------------------------
+
+### Selecione os produtos
+
+```{r}
+
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Resultados
+
+```{r}
+
+
+
+
+```
+
 Missão
 =====================================  
 
@@ -798,7 +807,7 @@ rt_days() %>%
   filter(holiday == 1) %>% 
   ggplot(aes(x = dow, y = full_hour, fill = get(selected_col_2()))) +
   geom_tile() +
-  #scale_fill_viridis_c(labels = scales::label_number_si()) +
+  scale_fill_viridis_c(labels = scales::label_number_si()) +
   labs(x = "", y = "Hora", title = "Feriados", fill = input$var_id_2
        )
   
@@ -879,62 +888,6 @@ acc_prod %>%
 
 ```
 
-
-Regras de Associação
-=====================================  
-
-Row {.tabset}
------------------------------------------------------------------------
-
-### Regras
-
-```{r echo = FALSE}
-
-#Grafico ARULES
-plot(rules_regency  ,
-     engine = 'visNetwork',
-     method = 'graph')
-     #control = list(nodeCol='darkblue'))
-
-
-```
-
-### Regency
-
-```{r}
-
-#Grafico ARULES
-#plot(rules.sub[100:108],
-#     engine = 'visNetwork',
-#     method = 'graph')
-#     #control = list(nodeCol='darkblue'))
-
-```
-
-
-Recomendação
-=====================================  
-
-Row {.sidebar}
------------------------------------------------------------------------
-
-### Selecione os produtos
-
-```{r}
-
-```
-
-
-Row {.tabset}
------------------------------------------------------------------------
-
-### Resultados
-
-```{r}
-
-
-
-```
 
 
 
