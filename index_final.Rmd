@@ -449,6 +449,66 @@ isolate({
 
 ```
 
+
+```{r}
+
+
+
+
+```
+
+
+### Preços
+
+
+
+```{r}
+
+plotOutput("histogram")
+
+#- Preços de produtos também apresentam assimetria com calda longa a esquerda, mas para o modelo de cestas não achamos necessário fazer nenhum filtro.
+
+```
+
+```{r warning=FALSE, context="server"}
+
+selected_col <- reactive({
+  
+    clicks <- input$update_button
+  
+  isolate({
+  
+    cols_map %>% 
+      #filter(name == "Quantidade") %>% 
+      filter(name == input$var_id) %>% 
+      pull(col)
+  
+})})
+
+output$histogram <- renderPlot({
+  
+  clicks <- input$update_button
+  
+isolate({ 
+  
+retail %>% 
+ggplot(aes(x = unit_price)) + 
+  geom_histogram(binwidth = 1) +
+    coord_cartesian(xlim = c(0, 20))+
+  geom_vline(aes(xintercept=median(unit_price)),
+            color="blue", linetype="dashed", size=1) +
+   geom_vline(aes(xintercept=mean(unit_price)),
+            color="red", linetype="dashed", size=1) +
+  #theme_economist() +
+  labs(title = "Preço por Produto",x = "Preço", y = "Produto")
+
+})})
+ 
+```
+
+
+
+
 ### Vendas por transação
 
 ```{r echo = FALSE}
@@ -519,53 +579,6 @@ tickets %>%
 ```
 
 
-### Preços
-
-
-
-```{r}
-
-plotOutput("histogram")
-
-#- Preços de produtos também apresentam assimetria com calda longa a esquerda, mas para o modelo de cestas não achamos necessário fazer nenhum filtro.
-
-```
-
-```{r warning=FALSE, context="server"}
-
-selected_col <- reactive({
-  
-    clicks <- input$update_button
-  
-  isolate({
-  
-    cols_map %>% 
-      #filter(name == "Quantidade") %>% 
-      filter(name == input$var_id) %>% 
-      pull(col)
-  
-})})
-
-output$histogram <- renderPlot({
-  
-  clicks <- input$update_button
-  
-isolate({ 
-  
-retail %>% 
-ggplot(aes(x = unit_price)) + 
-  geom_histogram(binwidth = 1) +
-    coord_cartesian(xlim = c(0, 20))+
-  geom_vline(aes(xintercept=median(unit_price)),
-            color="blue", linetype="dashed", size=1) +
-   geom_vline(aes(xintercept=mean(unit_price)),
-            color="red", linetype="dashed", size=1) +
-  #theme_economist() +
-  labs(title = "Preço por Produto",x = "Preço", y = "Produto")
-
-})})
- 
-```
 
 
 ### Clientes
@@ -911,7 +924,8 @@ Row {.tabset}
 ```{r echo = FALSE}
 
 
-vip::vip(glm_fit)
+vip::vip(glm_fit) +
+  labs(x = "Importância")
 
 
 ```
@@ -939,7 +953,7 @@ Conclusão
 
 ```{r}
 
-
+include_graphics("img/conclusao.png")
 
 
 ```

@@ -20,7 +20,7 @@ conflict_prefer("vi", "vip")
 #search_lhs <- paste(esquerda, collapse = "|")
 
 #criar uma base por Invoice, identificando Invoices com produtos foco
-t#ickets2 <- rt_uk %>% 
+#tickets2 <- rt_uk %>% 
  # #filter(product %in% products) %>% 
  # select(-stock_code, -invoice_date, -country) %>% 
  # mutate(foco = if_else(str_detect(product, SearchPattern, negate = TRUE),0,1),
